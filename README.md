@@ -22,16 +22,26 @@ Linux
 conda env create -f GUI_linux.yml
 ```
 
-If using pip, install the requirements
+If using pip, install the requirements via
 
 ```bash
 pip install -r requirements.txt
 ```
+You will also need to have installed a c++ compiler to compile code used by cython. This will usually come as standard with linux distributions and OSX, but if not please install one such as 
+
+GCC 4.7+ or MS VS 2015
 
 ## Usage
 
-When all requirements are installed, cd to the /GUI directory and run the GUI by
+When all requirements are installed, cd into the /GUI directory and run the GUI by
 
 ```bash
 python GUI.py
 ```
+
+There you will be greeted with the main page of the GUI with all options availible. Please consult the wiki for instructions on using the GUI.
+
+## Contributing
+
+For any bugs or update requests please contact rxn742
+

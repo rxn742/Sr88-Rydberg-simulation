@@ -5,7 +5,13 @@ This is coded by Robert Noakes and part of a 4th year undergraduate masters proj
 
 ## Installation
 
-This simulation has several dependencies that can be installed using a chosen package manager. If using anaconda, choose the virtual environment for your OS and install
+If you have git installed, download the repository via
+```bash
+git clone https://github.com/rxn742/Sr88-Rydberg-simulation.git
+```
+Another option is to download the repository as a .zip file and then extract to your desired location.
+
+This simulation has several dependencies that can be installed using a chosen package manager. If using anaconda, cd into the main directory and choose the virtual environment for your OS.
 
 Windows
 ```bash

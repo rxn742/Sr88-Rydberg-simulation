@@ -33,7 +33,7 @@ If using pip, install the requirements via
 ```bash
 pip install -r requirements.txt
 ```
-You will also need to have installed a c++ compiler to compile code used by cython. This will usually come as standard with linux distributions and OSX, but if not please install one such as 
+You will also need to have installed a C++ compiler to compile code used by cython. This will usually come as standard with linux distributions and OSX, but if you do not have one, please install a compiler such as 
 
 GCC 4.7+ or MS VS 2015
 
@@ -49,5 +49,5 @@ There you will be greeted with the main page of the GUI with all options availib
 
 ## Contributing
 
-For any bugs or update requests please contact rxn742
+For any bugs or update requests please raise an issue.
 

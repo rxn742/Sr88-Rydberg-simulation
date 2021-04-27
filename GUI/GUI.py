@@ -23,6 +23,8 @@ import matplotlib.pyplot as plt
 class UI(QMainWindow):
 
     def __init__(self, *args, **kwargs):
+        self.spontaneous_21_413 = spontaneous_21_413
+        self.spontaneous_21_318 = spontaneous_21_318
         super(UI, self).__init__(*args, **kwargs)
         self.setWindowTitle("Sr88 3 Level System Simulator")
         self.screen = QDesktopWidget().screenGeometry(-1)
@@ -180,22 +182,26 @@ class UI(QMainWindow):
     def transmission(self):
         vals = self.get_params()
         for param, val in vals.items():
-        	if vals[param] == "0":
-        		vals[param] = 0
-        	if vals[param] == "":
-        		vals[param] = 0
-        	else:
-        		vals[param] = float(val)
+            if vals[param] == "0":
+                vals[param] = 0
+            if vals[param] == "":
+                vals[param] = 0
+            else:
+                vals[param] = float(val)
         vals["dmin"] = int(vals["dmin"])
         vals["dmax"] = int(vals["dmax"])
         vals["steps"] = int(vals["steps"])
         vals["n"] = int(vals["n"])
+        self.vals = vals
         
         if self.system_choice.currentIndex() == 0:
             d23_413 = func_d23_413(vals["n"], "1D2")
             if self.input_type.currentIndex() == 0:
                 if d23_413 == 0:
                     self.dme()
+                    return
+                if vals["pp"] == 0 or vals["cp"] == 0 or vals["pd"] == 0 or vals["cd"] == 0:
+                    self.power_warn()
                     return
                 vals["Ip"] = func_Ip_413(vals["pp"], vals["pd"])
                 vals["Ic"] = func_Ic_413(vals["cp"], vals["cd"])
@@ -205,14 +211,24 @@ class UI(QMainWindow):
                 if d23_413 == 0:
                     self.dme()
                     return
+                if vals["Ip"] == 0 or vals["Ic"] == 0:
+                    self.intensity_warn()
+                    return
                 vals["omega_p"] = func_omega_p_413(vals["Ip"])
                 vals["omega_c"] = func_omega_c_413(vals["Ic"], d23_413)
+            if self.input_type.currentIndex() == 2:
+                if vals["omega_p"] == 0 or vals["omega_c"] == 0:
+                    self.rabi_warn()
+                    return
         
         if self.system_choice.currentIndex() == 1:
             d23_318 = func_d23_318(vals["n"], "3D3")
             if self.input_type.currentIndex() == 0:
                 if d23_318 == 0:
                     self.dme()
+                    return
+                if vals["pp"] == 0 or vals["cp"] == 0 or vals["pd"] == 0 or vals["cd"] == 0:
+                    self.power_warn()
                     return
                 vals["Ip"] = func_Ip_318(vals["pp"], vals["pd"])
                 vals["Ic"] = func_Ic_318(vals["cp"], vals["cd"])
@@ -222,33 +238,39 @@ class UI(QMainWindow):
                 if d23_318 == 0:
                     self.dme()
                     return
+                if vals["Ip"] == 0 or vals["Ic"] == 0:
+                    self.intensity_warn()
+                    return
                 vals["omega_p"] = func_omega_p_318(vals["Ip"])
                 vals["omega_c"] = func_omega_c_318(vals["Ic"], d23_318)
-        
+            if self.input_type.currentIndex() == 2:
+                if vals["omega_p"] == 0 or vals["omega_c"] == 0:
+                    self.rabi_warn()
+                    return        
         if self.doppler.isChecked():
             gauss = "Y"
         else:
             gauss = "N"
 
         if self.transit.isChecked():
-        	tt = "Y"
+            tt = "Y"
         else:
-        	tt = "N"
+            tt = "N"
         if vals["pd"] == 0:
-        	tt = "N"
+            tt = "N"
         if vals["cd"] == 0:
-        	tt = "N"
+            tt = "N"
         
         if self.system_choice.currentIndex() == 0:
-            spontaneous_32_413 = func_spon_413(vals["n"], "1D2")
-            dlist, tlist = tcalc(vals["delta_c"], vals["omega_p"], vals["omega_c"], spontaneous_32_413, spontaneous_21_413, 
+            self.spontaneous_32_413 = func_spon_413(vals["n"], "1D2")
+            dlist, tlist = tcalc(vals["delta_c"], vals["omega_p"], vals["omega_c"], self.spontaneous_32_413, self.spontaneous_21_413, 
                        vals["lwp"], vals["lwc"], vals["dmin"], vals["dmax"], vals["steps"], gauss, kp_413, kc_413, 
                        vals["density"], d12_413, vals["sl"], vals["T"], vals["alpha"], vals["pd"], vals["cd"], tt)
             self.t_plotter(dlist, tlist)
             
         if self.system_choice.currentIndex() == 1:
-            spontaneous_32_318 = func_spon_318(vals["n"], "3D3")
-            dlist, tlist = tcalc(vals["delta_c"], vals["omega_p"], vals["omega_c"], spontaneous_32_318, spontaneous_21_318, 
+            self.spontaneous_32_318 = func_spon_318(vals["n"], "3D3")
+            dlist, tlist = tcalc(vals["delta_c"], vals["omega_p"], vals["omega_c"], self.spontaneous_32_318, self.spontaneous_21_318, 
                        vals["lwp"], vals["lwc"], vals["dmin"], vals["dmax"], vals["steps"], gauss, kp_318, kc_318, 
                        vals["density"], d12_318, vals["sl"], vals["T"], vals["alpha"], vals["pd"], vals["cd"], tt)
             self.t_plotter(dlist, tlist)
@@ -264,54 +286,87 @@ class UI(QMainWindow):
         vals["dmax"] = int(vals["dmax"])
         vals["steps"] = int(vals["steps"])
         vals["n"] = int(vals["n"])
+        self.vals = vals
         
         if self.system_choice.currentIndex() == 0:
+            d23_413 = func_d23_413(vals["n"], "1D2")
             if self.input_type.currentIndex() == 0:
+                if d23_413 == 0:
+                    self.dme()
+                    return
+                if vals["pp"] == 0 or vals["cp"] == 0 or vals["pd"] == 0 or vals["cd"] == 0:
+                    self.power_warn()
+                    return
                 vals["Ip"] = func_Ip_413(vals["pp"], vals["pd"])
                 vals["Ic"] = func_Ic_413(vals["cp"], vals["cd"])
                 vals["omega_p"] = func_omega_p_413(vals["Ip"])
-                vals["omega_c"] = func_omega_c_413(vals["Ic"])
+                vals["omega_c"] = func_omega_c_413(vals["Ic"], d23_413)
             if self.input_type.currentIndex() == 1:
+                if d23_413 == 0:
+                    self.dme()
+                    return
+                if vals["Ip"] == 0 or vals["Ic"] == 0:
+                    self.intensity_warn()
+                    return
                 vals["omega_p"] = func_omega_p_413(vals["Ip"])
-                vals["omega_c"] = func_omega_c_413(vals["Ic"])
+                vals["omega_c"] = func_omega_c_413(vals["Ic"], d23_413)
+            if self.input_type.currentIndex() == 2:
+                if vals["omega_p"] == 0 or vals["omega_c"] == 0:
+                    self.rabi_warn()
+                    return
         
         if self.system_choice.currentIndex() == 1:
+            d23_318 = func_d23_318(vals["n"], "3D3")
             if self.input_type.currentIndex() == 0:
+                if d23_318 == 0:
+                    self.dme()
+                    return
+                if vals["pp"] == 0 or vals["cp"] == 0 or vals["pd"] == 0 or vals["cd"] == 0:
+                    self.power_warn()
+                    return
                 vals["Ip"] = func_Ip_318(vals["pp"], vals["pd"])
                 vals["Ic"] = func_Ic_318(vals["cp"], vals["cd"])
                 vals["omega_p"] = func_omega_p_318(vals["Ip"])
-                vals["omega_c"] = func_omega_c_318(vals["Ic"])
+                vals["omega_c"] = func_omega_c_318(vals["Ic"], d23_318)
             if self.input_type.currentIndex() == 1:
+                if d23_413 == 0:
+                    self.dme()
+                    return
+                if vals["Ip"] == 0 or vals["Ic"] == 0:
+                    self.intensity_warn()
+                    return
                 vals["omega_p"] = func_omega_p_318(vals["Ip"])
-                vals["omega_c"] = func_omega_c_318(vals["Ic"])
-        
+                vals["omega_c"] = func_omega_c_318(vals["Ic"], d23_318)
+            if self.input_type.currentIndex() == 2:
+                if vals["omega_p"] == 0 or vals["omega_c"] == 0:
+                    self.rabi_warn()
+                    return
         if self.doppler.isChecked():
             gauss = "Y"
         else:
             gauss = "N"
 
         if self.transit.isChecked():
-        	tt = "Y"
+            if vals["pd"] == 0:
+                self.transit_warn()
+            if vals["cd"] == 0:
+                self.transit_warn()
+            tt = "Y"
         else:
-        	tt = "N"
-
-        if vals["pd"] == 0:
-        	tt = "N"
-        if vals["cd"] == 0:
-        	tt = "N"
+            tt = "N"
         
         self.showdialog()
         
         if self.system_choice.currentIndex() == 0:
-            spontaneous_32_413 = func_spon_413(vals["n"], "1D2")
-            dlist, plist = pop_calc(vals["delta_c"], vals["omega_p"], vals["omega_c"], spontaneous_32_413, spontaneous_21_413, 
+            self.spontaneous_32_413 = func_spon_413(vals["n"], "1D2")
+            dlist, plist = pop_calc(vals["delta_c"], vals["omega_p"], vals["omega_c"], self.spontaneous_32_413, self.spontaneous_21_413, 
                    vals["lwp"], vals["lwc"], vals["dmin"], vals["dmax"], vals["steps"], self.state_index, gauss, 
                    vals["T"], kp_413, kc_413, vals["alpha"], vals["pd"], vals["cd"], tt)
             self.p_plotter(dlist, plist)           
         
         if self.system_choice.currentIndex() == 1:
-            spontaneous_32_318 = func_spon_318(vals["n"], "3D3")
-            dlist, plist = pop_calc(vals["delta_c"], vals["omega_p"], vals["omega_c"], spontaneous_32_318, spontaneous_21_318, 
+            self.spontaneous_32_318 = func_spon_318(vals["n"], "3D3")
+            dlist, plist = pop_calc(vals["delta_c"], vals["omega_p"], vals["omega_c"], self.spontaneous_32_318, self.spontaneous_21_318, 
                    vals["lwp"], vals["lwc"], vals["dmin"], vals["dmax"], vals["steps"], self.state_index, gauss, 
                    vals["T"], kp_318, kc_318, vals["alpha"], vals["pd"], vals["cd"], tt)
             self.p_plotter(dlist, plist)
@@ -432,6 +487,12 @@ class UI(QMainWindow):
     
     def t_plotter(self, dlist, tlist):
         """ Plotting"""
+        if self.system_choice.currentIndex() == 0:
+            self.spontaneous_21 = self.spontaneous_21_413
+            self.spontaneous_32 = self.spontaneous_32_413
+        if self.system_choice.currentIndex() == 1:
+            self.spontaneous_21 = self.spontaneous_21_318
+            self.spontaneous_32 = self.spontaneous_32_318
         self.dlist = dlist
         self.flist = tlist
         self.typ = "t"
@@ -455,10 +516,22 @@ class UI(QMainWindow):
         
         plt.title(r"Probe transmission against probe beam detuning")
         if dlist[-1]-dlist[0] >= 1e6:
-            ax.plot(dlist/(1e6), tlist, color="orange")
+            ax.plot(dlist/(1e6), tlist, color="orange", label="$\Omega_c=$" f"{self.vals['omega_c']:.2e} $Hz$"\
+                "\n" "$\Omega_p=$" f"{self.vals['omega_p']:.2e} $Hz$" "\n" \
+                "$\Gamma_{c}$" f"= {self.spontaneous_32/(2*np.pi):.2e} $Hz$" "\n" \
+                "$\Gamma_{p}$" f"= {self.spontaneous_21/(2*np.pi):.2e} $Hz$" "\n"\
+                "$\Delta_c =$" f"{self.vals['delta_c']/1e6:.2f} $Hz$" "\n" \
+                f"$\gamma_p$ = {self.vals['lwp']:.2e} $Hz$" "\n" 
+                f"$\gamma_c$ = {self.vals['lwc']:.2e} $Hz$")
             ax.set_xlabel(r"$\Delta_p$ / MHz")
         else:
-            ax.plot(dlist/(1e3), tlist, color="orange")
+            ax.plot(dlist/(1e3), tlist, color="orange", label="$\Omega_c=$" f"{self.vals['omega_c']:.2e} $Hz$"\
+                "\n" "$\Omega_p=$" f"{self.vals['omega_p']:.2e} $Hz$" "\n" \
+                "$\Gamma_{c}$" f"= {self.spontaneous_32/(2*np.pi):.2e} $Hz$" "\n" \
+                "$\Gamma_{p}$" f"= {self.spontaneous_21/(2*np.pi):.2e} $Hz$" "\n"\
+                "$\Delta_c =$" f"{self.vals['delta_c']/1e6:.2f} $Hz$" "\n" \
+                f"$\gamma_p$ = {self.vals['lwp']:.2e} $Hz$" "\n" 
+                f"$\gamma_c$ = {self.vals['lwc']:.2e} $Hz$")
             ax.set_xlabel(r"$\Delta_p$ / kHz")
         ax.set_ylabel(r"Probe Transmission")
         ax.legend()
@@ -466,6 +539,12 @@ class UI(QMainWindow):
         fig.canvas.mpl_connect('close_event', self.save_dialog)
         
     def p_plotter(self, dlist, plist):
+        if self.system_choice.currentIndex() == 0:
+            self.spontaneous_21 = self.spontaneous_21_413
+            self.spontaneous_32 = self.spontaneous_32_413
+        if self.system_choice.currentIndex() == 1:
+            self.spontaneous_21 = self.spontaneous_21_318
+            self.spontaneous_32 = self.spontaneous_32_318
         self.dlist = dlist
         self.flist = plist
         self.typ = "p"
@@ -473,10 +552,22 @@ class UI(QMainWindow):
         ax = fig.add_subplot(111)
         plt.title(f"{self.state_number} population")
         if dlist[-1] - dlist[0] >= 1e6:
-            ax.plot(dlist/(1e6), plist, color="orange")
+            ax.plot(dlist/(1e6), plist, color="orange", label="$\Omega_c=$" f"{self.vals['omega_c']:.2e} $Hz$"\
+                "\n" "$\Omega_p=$" f"{self.vals['omega_p']:.2e} $Hz$" "\n" \
+                "$\Gamma_{c}$" f"= {self.spontaneous_32/(2*np.pi):.2e} $Hz$" "\n" \
+                "$\Gamma_{p}$" f"= {self.spontaneous_21/(2*np.pi):.2e} $Hz$" "\n"\
+                "$\Delta_c =$" f"{self.vals['delta_c']/1e6:.2f} $Hz$" "\n" \
+                f"$\gamma_p$ = {self.vals['lwp']:.2e} $Hz$" "\n" 
+                f"$\gamma_c$ = {self.vals['lwc']:.2e} $Hz$")
             ax.set_xlabel(r"$\Delta_p$ / MHz")
         else:
-            ax.plot(dlist/(1e3), plist, color="orange")
+            ax.plot(dlist/(1e3), plist, color="orange", label="$\Omega_c=$" f"{self.vals['omega_c']:.2e} $Hz$"\
+                "\n" "$\Omega_p=$" f"{self.vals['omega_p']:.2e} $Hz$" "\n" \
+                "$\Gamma_{c}$" f"= {self.spontaneous_32/(2*np.pi):.2e} $Hz$" "\n" \
+                "$\Gamma_{p}$" f"= {self.spontaneous_21/(2*np.pi):.2e} $Hz$" "\n"\
+                "$\Delta_c =$" f"{self.vals['delta_c']/1e6:.2f} $Hz$" "\n" \
+                f"$\gamma_p$ = {self.vals['lwp']:.2e} $Hz$" "\n" 
+                f"$\gamma_c$ = {self.vals['lwc']:.2e} $Hz$")
             ax.set_xlabel(r"$\Delta_p$ / kHz")
         ax.set_ylabel(f"{self.state_number} state popultaion")
         ax.legend()
@@ -486,6 +577,22 @@ class UI(QMainWindow):
     def dme(self):
         QMessageBox.about(self, "Dipole Matrix Element", 
         "Dipole matrix element not found! \n \nConsult readme for valid n levels")
+
+    def power_warn(self):
+        QMessageBox.about(self, "Powers and Diameters", 
+        "Please enter valid laser powers and diameters")
+
+    def intensity_warn(self):
+        QMessageBox.about(self, "Intensities", 
+        "Please enter valid laser intensities")
+
+    def transit_warn(self):
+        QMessageBox.about(self, "Transit time", 
+        "Transit time cannot be included without specifying laser diameters")
+        
+    def rabi_warn(self):
+        QMessageBox.about(self, "Rabi frequencies", 
+        "Please enter valid Rabi frequencies")
         
 def main():        
     app = QApplication(sys.argv)

@@ -491,7 +491,7 @@ def maxwell_long(v, mp):
     return 2*(v**3/mp**4)*np.exp(-(v**2/mp**2))
 
 def maxwell_trans(v, mp):
-    return 1/(np.sqrt(np.pi)*mp)*np.exp(-(v**2/mp**2))
+    return 1/(np.sqrt(2*np.pi)*mp)*np.exp(-(v**2/(2*mp**2)))
 
 def effectiveT(mp):
     return ((mp**2*(88*1.6605390666e-27))/(2*k))

@@ -261,7 +261,7 @@ class UI(QMainWindow):
                 return
             tt = "Y"
         else:
-        	tt = "N"
+            tt = "N"
         
         if self.system_choice.currentIndex() == 0:
             self.spontaneous_32_413 = func_spon_413(vals["n"], "1D2")
@@ -357,23 +357,25 @@ class UI(QMainWindow):
                 return
             tt = "Y"
         else:
-        	tt = "N"
+            tt = "N"
         
         self.showdialog()
-        
-        if self.system_choice.currentIndex() == 0:
-            self.spontaneous_32_413 = func_spon_413(vals["n"], "1D2")
-            dlist, plist = pop_calc(vals["delta_c"], vals["omega_p"], vals["omega_c"], self.spontaneous_32_413, self.spontaneous_21_413, 
-                   vals["lwp"], vals["lwc"], vals["dmin"], vals["dmax"], vals["steps"], self.state_index, gauss, 
-                   vals["T"], kp_413, kc_413, vals["alpha"], vals["pd"], vals["cd"], tt)
-            self.p_plotter(dlist, plist)           
-        
-        if self.system_choice.currentIndex() == 1:
-            self.spontaneous_32_318 = func_spon_318(vals["n"], "3D3")
-            dlist, plist = pop_calc(vals["delta_c"], vals["omega_p"], vals["omega_c"], self.spontaneous_32_318, self.spontaneous_21_318, 
-                   vals["lwp"], vals["lwc"], vals["dmin"], vals["dmax"], vals["steps"], self.state_index, gauss, 
-                   vals["T"], kp_318, kc_318, vals["alpha"], vals["pd"], vals["cd"], tt)
-            self.p_plotter(dlist, plist)
+        try:
+            if self.system_choice.currentIndex() == 0:
+                self.spontaneous_32_413 = func_spon_413(vals["n"], "1D2")
+                dlist, plist = pop_calc(vals["delta_c"], vals["omega_p"], vals["omega_c"], self.spontaneous_32_413, self.spontaneous_21_413, 
+                       vals["lwp"], vals["lwc"], vals["dmin"], vals["dmax"], vals["steps"], self.state_index, gauss, 
+                       vals["T"], kp_413, kc_413, vals["alpha"], vals["pd"], vals["cd"], tt)
+                self.p_plotter(dlist, plist)           
+            
+            if self.system_choice.currentIndex() == 1:
+                self.spontaneous_32_318 = func_spon_318(vals["n"], "3D3")
+                dlist, plist = pop_calc(vals["delta_c"], vals["omega_p"], vals["omega_c"], self.spontaneous_32_318, self.spontaneous_21_318, 
+                       vals["lwp"], vals["lwc"], vals["dmin"], vals["dmax"], vals["steps"], self.state_index, gauss, 
+                       vals["T"], kp_318, kc_318, vals["alpha"], vals["pd"], vals["cd"], tt)
+                self.p_plotter(dlist, plist)
+        except:
+            return
             
     def load_csv(self):
         dlg = QFileDialog()

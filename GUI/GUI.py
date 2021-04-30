@@ -253,13 +253,15 @@ class UI(QMainWindow):
             gauss = "N"
 
         if self.transit.isChecked():
+            if vals["pd"] == 0:
+                self.transit_warn()
+                return
+            if vals["cd"] == 0:
+                self.transit_warn()
+                return
             tt = "Y"
         else:
-            tt = "N"
-        if vals["pd"] == 0:
-            tt = "N"
-        if vals["cd"] == 0:
-            tt = "N"
+        	tt = "N"
         
         if self.system_choice.currentIndex() == 0:
             self.spontaneous_32_413 = func_spon_413(vals["n"], "1D2")
@@ -349,11 +351,13 @@ class UI(QMainWindow):
         if self.transit.isChecked():
             if vals["pd"] == 0:
                 self.transit_warn()
+                return
             if vals["cd"] == 0:
                 self.transit_warn()
+                return
             tt = "Y"
         else:
-            tt = "N"
+        	tt = "N"
         
         self.showdialog()
         
@@ -401,7 +405,7 @@ class UI(QMainWindow):
             return
         if not self.filename.endswith('.csv'):
             self.filename += '.csv'
-        with open(f"{self.filename}", "w") as file:    
+        with open(f"{self.filename}", "w", newline='', encoding='utf-8') as file:    
             write = csv.writer(file, delimiter=',')    
             for param, val in self.get_params().items():
                 write.writerow([param, val])                        
@@ -475,7 +479,7 @@ class UI(QMainWindow):
                 return
             if not self.filename.endswith('.csv'):
                 self.filename += '.csv'
-            with open(f"{self.filename}", "w") as file:    
+            with open(f"{self.filename}", "w", newline='', encoding='utf-8') as file:    
                 write = csv.writer(file, delimiter=',')    
                 if self.typ == "t":
                     write.writerow(["Probe Detununing", "Probe Transmission"])

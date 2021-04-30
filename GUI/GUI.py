@@ -496,17 +496,17 @@ class UI(QMainWindow):
         self.dlist = dlist
         self.flist = tlist
         self.typ = "t"
-        fig = plt.figure()
+        fig = plt.figure(figsize=(8, 6))
         ax = fig.add_subplot(111)
         """ Geometric library to calculate linewidth of EIT peak (FWHM) """
         try:
             pw = FWHM(dlist, tlist)
             ct = contrast(dlist, tlist)
             if pw < 2*np.pi*1e6:
-                ax.text(0.5, 0.97, f"EIT peak FWHM = 2$\pi$ x {pw/(1e3*2*np.pi):.2f} $kHz$", transform=ax.transAxes, fontsize=10, va='center', ha='center')
+                ax.text(0.8, 0.07, f"EIT FWHM = 2$\pi$ x {pw/(1e3*2*np.pi):.2f} $kHz$", transform=ax.transAxes, fontsize=10, va='center', ha='center')
             else:
-                ax.text(0.5, 0.97, f"EIT peak FWHM = 2$\pi$ x {pw/(1e6*2*np.pi):.2f} $MHz$", transform=ax.transAxes, fontsize=10, va='center', ha='center')
-            ax.text(0.5, 0.93, f"EIT Contrast = {ct:.2f}", transform=ax.transAxes, fontsize=10, va='center', ha='center')        
+                ax.text(0.8, 0.07, f"EIT FWHM = 2$\pi$ x {pw/(1e6*2*np.pi):.2f} $MHz$", transform=ax.transAxes, fontsize=10, va='center', ha='center')
+            ax.text(0.8, 0.13, f"EIT Contrast = {ct:.2f}", transform=ax.transAxes, fontsize=10, va='center', ha='center')        
         except:
             pw = FWHM(dlist, -tlist)
             if pw < 2*np.pi*1e6:

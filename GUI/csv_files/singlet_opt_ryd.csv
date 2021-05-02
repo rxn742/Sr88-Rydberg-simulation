@@ -1,8 +1,8 @@
 n,56
-pp,2.17E-04
+pp,5.25e-3
 cp,2.50E-02
-pd,0.004
-cd,3.80E-04
+pd,0.02
+cd,3.86E-04
 Ip,
 Ic,
 omega_p,
@@ -13,7 +13,7 @@ density,1E+15
 sl,0.003
 T,650
 alpha,0.038
-dmin,-5.00E+08
-dmax,5.00E+08
-steps,2000
+dmin,-60e6
+dmax,60e6
+steps,100
 delta_c,0

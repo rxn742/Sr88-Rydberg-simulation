@@ -512,7 +512,7 @@ class UI(QMainWindow):
                 ax.text(0.8, 0.07, f"EIT FWHM = 2$\pi$ x {pw/(1e3*2*np.pi):.2f} $kHz$", transform=ax.transAxes, fontsize=10, va='center', ha='center')
             else:
                 ax.text(0.8, 0.07, f"EIT FWHM = 2$\pi$ x {pw/(1e6*2*np.pi):.2f} $MHz$", transform=ax.transAxes, fontsize=10, va='center', ha='center')
-            ax.text(0.8, 0.13, f"EIT Contrast = {ct:.2f}", transform=ax.transAxes, fontsize=10, va='center', ha='center')        
+            ax.text(0.8, 0.13, f"EIT Contrast = {ct:.3f}", transform=ax.transAxes, fontsize=10, va='center', ha='center')        
         except:
             pw = FWHM(dlist, -tlist)
             if pw < 2*np.pi*1e6:

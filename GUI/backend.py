@@ -477,12 +477,18 @@ def FWHM(dlist, tlist):
     peak = find_peaks(tlist, distance = 999)[0]
     sample = dlist[1]-dlist[0]
     width = peak_widths(tlist, peak)[0]*sample
-    return width[0]
+    try:
+        return width[0]
+    except:
+        return 0
 
 def contrast(dlist, tlist):
     peak = find_peaks(tlist, distance = 999)[0]
     contrast = peak_prominences(tlist, peak)
-    return contrast[0][0]
+    try:
+        return contrast[0][0]
+    except:
+        return 0
 
 def v_mp(T):
     return np.sqrt(2*k*(T)/(88*1.6605390666e-27))

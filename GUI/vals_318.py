@@ -21,11 +21,13 @@ kp_318 = 2*np.pi/689e-9 # Probe wavevector in m^-1
 kc_318 = 2*np.pi/318e-9 # Coupling wavevector in m^-1
 
 os_3D3 = {}
-with open("oscillator.csv", "rt") as file: 
+wl_3D3 = {}
+with open("rydberg_vals.csv", "rt") as file: 
     reader = csv.reader(file, delimiter=',')
     for rows in reader:
         try:
             os_3D3[str(rows[0])] = float(rows[2])
+            wl_3D3[str(rows[0])] = float(rows[4])
         except:
             pass
 
@@ -50,6 +52,13 @@ def func_spon_318(n, series):
 def func_d23_318(n, series):
     if series == "3D3":
         try:    
-            return np.sqrt((3*os_3D3[str(n)]*hbar*318e-9*e**2)/(4*np.pi*m_e*c))
+            return np.sqrt((3*os_3D3[str(n)]*wl_3D3[str(n)]*1e-9*hbar*e**2)/(4*np.pi*m_e*c))
+        except:
+            return 0
+
+def func_kc_318(n, series):
+    if series == "3D3":
+        try:
+            return 2*np.pi/(wl_3D3[str(n)]*1e-9)
         except:
             return 0

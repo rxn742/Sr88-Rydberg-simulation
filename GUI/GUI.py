@@ -13,10 +13,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from backend import tcalc, pop_calc, FWHM, contrast
-from vals_413 import d12_413, func_d23_413, func_spon_413, spontaneous_21_413, kp_413, kc_413, \
-                        func_Ic_413, func_Ip_413, func_omega_c_413, func_omega_p_413
-from vals_318 import d12_318, func_d23_318, kp_318, kc_318, func_spon_318, spontaneous_21_318,\
-                        func_Ic_318, func_Ip_318, func_omega_c_318, func_omega_p_318
+from vals_413 import d12_413, func_d23_413, func_spon_413, spontaneous_21_413, kp_413, \
+                        func_Ic_413, func_Ip_413, func_omega_c_413, func_omega_p_413, func_kc_413
+from vals_318 import d12_318, func_d23_318, kp_318, func_spon_318, spontaneous_21_318,\
+                        func_Ic_318, func_Ip_318, func_omega_c_318, func_omega_p_318, func_kc_318
 import matplotlib.pyplot as plt
 
 
@@ -26,7 +26,7 @@ class UI(QMainWindow):
         self.spontaneous_21_413 = spontaneous_21_413
         self.spontaneous_21_318 = spontaneous_21_318
         super(UI, self).__init__(*args, **kwargs)
-        self.setWindowTitle("Sr88 3 Level System Simulator")
+        self.setWindowTitle("Sr88 3 Level System Simulator - By Robert Noakes")
         self.screen = QDesktopWidget().screenGeometry(-1)
         self.setFixedSize(640, 700)
         self.overallLayout = QHBoxLayout()
@@ -196,6 +196,7 @@ class UI(QMainWindow):
         
         if self.system_choice.currentIndex() == 0:
             d23_413 = func_d23_413(vals["n"], "1D2")
+            kc_413 = func_kc_413(vals["n"], "1D2")
             if self.input_type.currentIndex() == 0:
                 if d23_413 == 0:
                     self.dme()
@@ -223,6 +224,8 @@ class UI(QMainWindow):
         
         if self.system_choice.currentIndex() == 1:
             d23_318 = func_d23_318(vals["n"], "3D3")
+            kc_318 = func_kc_318(vals["n"], "3D3")
+            print(kc_318)
             if self.input_type.currentIndex() == 0:
                 if d23_318 == 0:
                     self.dme()
@@ -292,6 +295,7 @@ class UI(QMainWindow):
         
         if self.system_choice.currentIndex() == 0:
             d23_413 = func_d23_413(vals["n"], "1D2")
+            kc_413 = func_kc_413(vals["n"], "1D2")
             if self.input_type.currentIndex() == 0:
                 if d23_413 == 0:
                     self.dme()
@@ -319,6 +323,7 @@ class UI(QMainWindow):
         
         if self.system_choice.currentIndex() == 1:
             d23_318 = func_d23_318(vals["n"], "3D3")
+            kc_318 = func_kc_318(vals["n"], "3D3")
             if self.input_type.currentIndex() == 0:
                 if d23_318 == 0:
                     self.dme()
@@ -505,15 +510,15 @@ class UI(QMainWindow):
         fig = plt.figure(figsize=(8, 6))
         ax = fig.add_subplot(111)
         """ Geometric library to calculate linewidth of EIT peak (FWHM) """
-        try:
-            pw = FWHM(dlist, tlist)
-            ct = contrast(dlist, tlist)
+        pw = FWHM(dlist, tlist)
+        ct = contrast(dlist, tlist)
+        if pw != 0 and ct != 0:
             if pw < 2*np.pi*1e6:
                 ax.text(0.8, 0.07, f"EIT FWHM = 2$\pi$ x {pw/(1e3*2*np.pi):.2f} $kHz$", transform=ax.transAxes, fontsize=10, va='center', ha='center')
             else:
                 ax.text(0.8, 0.07, f"EIT FWHM = 2$\pi$ x {pw/(1e6*2*np.pi):.2f} $MHz$", transform=ax.transAxes, fontsize=10, va='center', ha='center')
             ax.text(0.8, 0.13, f"EIT Contrast = {ct:.3f}", transform=ax.transAxes, fontsize=10, va='center', ha='center')        
-        except:
+        else:
             pw = FWHM(dlist, -tlist)
             if pw < 2*np.pi*1e6:
                 ax.text(0.5, 0.97, f"Background FWHM = 2$\pi$ x {pw/(1e3*2*np.pi):.2f} $kHz$", transform=ax.transAxes, fontsize=10, va='center', ha='center')
@@ -558,7 +563,7 @@ class UI(QMainWindow):
         ax = fig.add_subplot(111)
         plt.title(f"{self.state_number} population")
         if dlist[-1] - dlist[0] >= 1e6:
-            ax.plot(dlist/(1e6), plist, color="orange", label="$\Omega_c=$" f"{self.vals['omega_c']:.2e} $Hz$"\
+            ax.plot(dlist/(1e6), plist, color="purple", label="$\Omega_c=$" f"{self.vals['omega_c']:.2e} $Hz$"\
                 "\n" "$\Omega_p=$" f"{self.vals['omega_p']:.2e} $Hz$" "\n" \
                 "$\Gamma_{c}$" f"= {self.spontaneous_32/(2*np.pi):.2e} $Hz$" "\n" \
                 "$\Gamma_{p}$" f"= {self.spontaneous_21/(2*np.pi):.2e} $Hz$" "\n"\
@@ -567,7 +572,7 @@ class UI(QMainWindow):
                 f"$\gamma_c$ = {self.vals['lwc']:.2e} $Hz$")
             ax.set_xlabel(r"$\Delta_p$ / MHz")
         else:
-            ax.plot(dlist/(1e3), plist, color="orange", label="$\Omega_c=$" f"{self.vals['omega_c']:.2e} $Hz$"\
+            ax.plot(dlist/(1e3), plist, color="purple", label="$\Omega_c=$" f"{self.vals['omega_c']:.2e} $Hz$"\
                 "\n" "$\Omega_p=$" f"{self.vals['omega_p']:.2e} $Hz$" "\n" \
                 "$\Gamma_{c}$" f"= {self.spontaneous_32/(2*np.pi):.2e} $Hz$" "\n" \
                 "$\Gamma_{p}$" f"= {self.spontaneous_21/(2*np.pi):.2e} $Hz$" "\n"\

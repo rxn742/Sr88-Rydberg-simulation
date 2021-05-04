@@ -21,11 +21,13 @@ kp_413 = 2*np.pi/461e-9 # Probe wavevector in m^-1
 kc_413 = 2*np.pi/413e-9 # Coupling wavevector in m^-1
 
 os_1D2 = {}
-with open("oscillator.csv", "rt") as file: 
+wl_1D2 = {}
+with open("rydberg_vals.csv", "rt") as file: 
     reader = csv.reader(file, delimiter=',')
     for rows in reader:
         try:
             os_1D2[str(rows[0])] = float(rows[1])
+            wl_1D2[str(rows[0])] = float(rows[3])
         except:
             pass
 
@@ -50,8 +52,13 @@ def func_spon_413(n, series):
 def func_d23_413(n, series):
     if series == "1D2":
         try:
-            return np.sqrt((3*os_1D2[str(n)]*hbar*413.3e-9*e**2)/(4*np.pi*m_e*c))
+            return np.sqrt((3*os_1D2[str(n)]*hbar*wl_1D2[str(n)]*1e-9*e**2)/(4*np.pi*m_e*c))
         except:
             return 0
-    
-    
+
+def func_kc_413(n, series):
+    if series == "1D2":
+        try:
+            return 2*np.pi/(wl_1D2[str(n)]*1e-9)
+        except:
+            return 0   

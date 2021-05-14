@@ -37,13 +37,13 @@ def hamiltonian(delta_p, delta_c, omega_p, omega_c):
     Parameters
     ----------
     delta_p : float
-        Probe detuning in Hz.
+        Probe detuning in rad/s
     delta_c : float
-        Coupling detuning in Hz.
+        Coupling detuning in rad/s
     omega_p : float
-        Probe Rabi frequency in Hz.
+        Probe Rabi frequency in rad/s
     omega_c : float
-        Coupling Rabi frequency in Hz.
+        Coupling Rabi frequency in rad/s
 
     Returns
     -------
@@ -61,10 +61,10 @@ def spontaneous_emission(spontaneous_32, spontaneous_21):
     This function defines the spntaneous emission collapse operators
     Parameters
     ----------
-    gamma_32 : float
-        state 3 to state 2 spontaneous emission rate.
-    gamma_21 : float
-        state 2 to state 1 spontaneous emission rate.
+    spontaneous_32 : float
+        state 3 to state 2 spontaneous emission rate in rad/s
+    spontaneous_21 : float
+        state 2 to state 1 spontaneous emission rate in rad/s
     
     Returns
     -------
@@ -80,10 +80,10 @@ def laser_linewidth(lw_probe, lw_coupling):
     """
     Parameters
     ----------
-    lwp : float
-        Probe beam linewidth in Hz
-    lwc : float
-        Coupling beam linewidth in Hz
+    lw_probe : float
+        Probe beam linewidth in rad/s
+    lw_coupling : float
+        Coupling beam linewidth rad/s
 
     Returns
     -------
@@ -104,8 +104,12 @@ def transit_time(temperature, probe_diameter, coupling_diameter):
     """
     Parameters
     ----------
-    Temperature : float (Kelvin)
-        Temperature of the oven
+    temperature : float
+        Temperature of the oven in Kelvin
+    probe_diameter: float
+        Circular probe laser diameter in metres
+    coupling_diameter: float
+        Circular coupling laser diameter in metres
 
     Returns
     -------
@@ -113,7 +117,7 @@ def transit_time(temperature, probe_diameter, coupling_diameter):
         The transit time super operator 
 
     """
-    mean_speed = 0.75*np.sqrt(np.pi)*v_mp(temperature)
+    mean_speed = 0.75*np.sqrt(np.pi)*u(temperature)
     tt_probe = mean_speed/probe_diameter
     tt_coupling = mean_speed/coupling_diameter
     tt_array = np.zeros((9,9))
@@ -136,9 +140,29 @@ def Liouvillian(delta_p, delta_c, omega_p, omega_c,
     Parameters
     ----------
     delta_p : float
-        Probe detuning in Hz.
+        Probe detuning in rad/s
     delta_c : float
-        Coupling detuning in Hz.
+        Coupling detuning in rad/s
+    omega_p : float
+        Probe Rabi frequency in rad/s
+    omega_c : float
+        Coupling Rabi frequency in rad/s
+    spontaneous_32 : float
+        state 3 to state 2 spontaneous emission rate in rad/s
+    spontaneous_21 : float
+        state 2 to state 1 spontaneous emission rate in rad/s
+    lw_probe : float
+        Probe beam linewidth in rad/s
+    lw_coupling : float
+        Coupling beam linewidth rad/s
+    temperature : float
+        Temperature of the oven in Kelvin
+    probe_diameter: float
+        Circular probe laser diameter in metres
+    coupling_diameter: float
+        Circular coupling laser diameter in metres
+    tt : string
+        Enter argument "Y" for transit time to be included
 
     Returns
     -------
@@ -163,9 +187,29 @@ def population(delta_p, delta_c, omega_p, omega_c, spontaneous_32, spontaneous_2
     Parameters
     ----------
     delta_p : float
-        Probe detuning in Hz.
+        Probe detuning in rad/s
     delta_c : float
-        Coupling detuning in Hz.
+        Coupling detuning in rad/s
+    omega_p : float
+        Probe Rabi frequency in rad/s
+    omega_c : float
+        Coupling Rabi frequency in rad/s
+    spontaneous_32 : float
+        state 3 to state 2 spontaneous emission rate in rad/s
+    spontaneous_21 : float
+        state 2 to state 1 spontaneous emission rate in rad/s
+    lw_probe : float
+        Probe beam linewidth in rad/s
+    lw_coupling : float
+        Coupling beam linewidth rad/s
+    temperature : float
+        Temperature of the oven in Kelvin
+    probe_diameter: float
+        Circular probe laser diameter in metres
+    coupling_diameter: float
+        Circular coupling laser diameter in metres
+    tt : string
+        Enter argument "Y" for transit time to be included
 
     Returns
     -------
@@ -179,24 +223,46 @@ def population(delta_p, delta_c, omega_p, omega_c, spontaneous_32, spontaneous_2
     return rho
 
 def doppler(v, delta_p, delta_c, omega_p, omega_c, spontaneous_32,
-            spontaneous_21, lw_probe, lw_coupling, mp, kp, kc, state_index, 
+            spontaneous_21, lw_probe, lw_coupling, sigma, kp, kc, state_index, 
             temperature, probe_diameter, coupling_diameter, tt):
     """
     This function generates the integrand to solve when including Doppler broadening
     Parameters
     ----------
     v : float
-        Transverse velocity of atom
+        Transverse velocity of atom in m/s
     delta_p : float
-        Probe detuning in Hz.
+        Probe detuning in rad/s
     delta_c : float
-        Coupling detuning in Hz.
-    mu : float
-        Mean transverse velocity
-    sig : float
-        Transverse velocity standard deviation
+        Coupling detuning in rad/s
+    omega_p : float
+        Probe Rabi frequency in rad/s
+    omega_c : float
+        Coupling Rabi frequency in rad/s
+    spontaneous_32 : float
+        state 3 to state 2 spontaneous emission rate in rad/s
+    spontaneous_21 : float
+        state 2 to state 1 spontaneous emission rate in rad/s
+    lw_probe : float
+        Probe beam linewidth in rad/s
+    lw_coupling : float
+        Coupling beam linewidth rad/s
+    sigma : float
+        Width of the transverse velocity distribution in m/s
+    kp : float
+        Probe transition wavenumber in m^-1
+    kc : float
+        Coupling transition wavenumber in m^-1
     state_index : tuple
-        chosen element of the density matrix
+        Element of density matrix to select
+    temperature : float
+        Temperature of the oven in Kelvin
+    probe_diameter: float
+        Circular probe laser diameter in metres
+    coupling_diameter: float
+        Circular coupling laser diameter in metres
+    tt : string
+        Enter argument "Y" for transit time to be included
         
     Returns
     -------
@@ -207,30 +273,52 @@ def doppler(v, delta_p, delta_c, omega_p, omega_c, spontaneous_32,
     if state_index == (1,0):
         integrand = np.imag(population(delta_p-kp*v, delta_c+kc*v, omega_p, 
         omega_c, spontaneous_32, spontaneous_21, lw_probe, lw_coupling, 
-        temperature, probe_diameter, coupling_diameter, tt)[state_index]*maxwell_trans(v, mp))
+        temperature, probe_diameter, coupling_diameter, tt)[state_index]*maxwell_trans(v, sigma))
     else:
         integrand = np.real(population(delta_p-kp*v, delta_c+kc*v, omega_p, 
         omega_c, spontaneous_32, spontaneous_21, lw_probe, lw_coupling, 
-        temperature, probe_diameter, coupling_diameter, tt)[state_index]*maxwell_trans(v, mp))
+        temperature, probe_diameter, coupling_diameter, tt)[state_index]*maxwell_trans(v, sigma))
     return integrand
 
 def doppler_int(delta_p, delta_c, omega_p, omega_c, spontaneous_32, 
-               spontaneous_21, lw_probe, lw_coupling, mp, kp, kc, state_index, beamdiv, 
+               spontaneous_21, lw_probe, lw_coupling, sigma, kp, kc, state_index, beamdiv, 
                temperature, probe_diameter, coupling_diameter, tt):
     """
     This function generates the integrand to solve when including Doppler broadening
     Parameters
     ----------
     delta_p : float
-        Probe detuning in Hz.
+        Probe detuning in rad/s
     delta_c : float
-        Coupling detuning in Hz.
-    mu : float
-        Mean transverse velocity
-    sig : float
-        Transverse velocity standard deviation
+        Coupling detuning in rad/s
+    omega_p : float
+        Probe Rabi frequency in rad/s
+    omega_c : float
+        Coupling Rabi frequency in rad/s
+    spontaneous_32 : float
+        state 3 to state 2 spontaneous emission rate in rad/s
+    spontaneous_21 : float
+        state 2 to state 1 spontaneous emission rate in rad/s
+    lw_probe : float
+        Probe beam linewidth in rad/s
+    lw_coupling : float
+        Coupling beam linewidth rad/s
+    sigma : float
+        Width of the transverse velocity distribution in m/s
+    kp : float
+        Probe transition wavenumber in m^-1
+    kc : float
+        Coupling transition wavenumber in m^-1
     state_index : tuple
-        chosen element of the density matrix
+        Element of density matrix to select
+    temperature : float
+        Temperature of the oven in Kelvin
+    probe_diameter: float
+        Circular probe laser diameter in metres
+    coupling_diameter: float
+        Circular coupling laser diameter in metres
+    tt : string
+        Enter argument "Y" for transit time to be included
         
     Returns
     -------
@@ -238,9 +326,8 @@ def doppler_int(delta_p, delta_c, omega_p, omega_c, spontaneous_32,
         Doppler averaged density matrix element
 
     """
-    mp = mp*beamdiv
-    p_avg = quad(doppler, -3*mp, 3*mp, args=(delta_p, delta_c, omega_p, omega_c, spontaneous_32,
-            spontaneous_21, lw_probe, lw_coupling, mp, kp, kc, state_index, 
+    p_avg = quad(doppler, -3*sigma, 3*sigma, args=(delta_p, delta_c, omega_p, omega_c, spontaneous_32,
+            spontaneous_21, lw_probe, lw_coupling, sigma, kp, kc, state_index, 
             temperature, probe_diameter, coupling_diameter, tt))[0]
     return p_avg
     
@@ -255,14 +342,42 @@ def pop_calc(delta_c, omega_p, omega_c, spontaneous_32,
     ---------- 
     delta_c : float
         Coupling detuning in Hz.
+    omega_p : float
+        Probe Rabi frequency in rad/s
+    omega_c : float
+        Coupling Rabi frequency in rad/s
+    spontaneous_32 : float
+        state 3 to state 2 spontaneous emission rate in rad/s
+    spontaneous_21 : float
+        state 2 to state 1 spontaneous emission rate in rad/s
+    lw_probe : float
+        Probe beam linewidth in rad/s
+    lw_coupling : float
+        Coupling beam linewidth rad/s
     dmin : float
-        Lower bound of Probe detuning in MHz
+        Lower bound of Probe detuning in angular MHz
     dmax : float
-        Upper bound of Probe detuning in MHz
+        Upper bound of Probe detuning in angular MHz
     steps : int
         Number of Probe detunings to calculate the population probability
     state_index : tuple
-        chosen element of the density matrix
+        Element of density matrix to select
+    gauss : string
+        Enter argument "Y" to include Doppler broadening
+    temperature : float
+        Temperature of the oven in Kelvin
+    kp : float
+        Probe transition wavenumber in m^-1
+    kc : float
+        Coupling transition wavenumber in m^-1
+    beamdiv : float
+        Full divergence angle of the atomic beam in rad
+    probe_diameter: float
+        Circular probe laser diameter in metres
+    coupling_diameter: float
+        Circular coupling laser diameter in metres
+    tt : string
+        Enter argument "Y" for transit time to be included
 
     Returns
     -------
@@ -275,11 +390,11 @@ def pop_calc(delta_c, omega_p, omega_c, spontaneous_32,
     iters = np.empty(steps+1, dtype=tuple)
     dlist = np.linspace(dmin, dmax, steps+1)
     if gauss == "Y":
-        mp = np.sqrt(3/2)*v_mp(temperature)
+        sigma = beamdiv*np.sqrt(3/2)*u(temperature)
         for i in range(0, steps+1):
             iters[i] = (dlist[i], delta_c, omega_p, omega_c, 
                         spontaneous_32, spontaneous_21, 
-                        lw_probe, lw_coupling, mp, 
+                        lw_probe, lw_coupling, sigma, 
                         kp, kc, state_index, beamdiv, 
                         temperature, probe_diameter, 
                         coupling_diameter, tt)
@@ -294,64 +409,6 @@ def pop_calc(delta_c, omega_p, omega_c, spontaneous_32,
         plist = np.array(np.abs([x[state_index] for x in plist]))
     return dlist, plist
 
-def pop_plot(state, delta_c, omega_p, omega_c, spontaneous_32, 
-             spontaneous_21, lw_probe, lw_coupling, dmin, dmax, 
-             steps, gauss, temperature, kp, kc, beamdiv, 
-             probe_diameter, coupling_diameter, tt):
-    """
-    This function plots the population probability of a chosen state against probe detuning
-    Parameters
-    ---------- 
-    delta_c : float
-        Coupling detuning in Hz.
-    dmin : float
-        Lower bound of Probe detuning in MHz
-    dmax : float
-        Upper bound of Probe detuning in MHz
-    steps : int
-        Number of Probe detunings to calculate the population probabilities 
-
-    Returns
-    -------
-    Population : plot
-        Plot of chosen state population probability against probe detuning
-
-    """
-    if state == "Ground":
-        state_index = 0,0
-    if state == "Intermediate":
-        state_index = 1,1
-    if state == "Rydberg":
-        state_index = 2,2
-    
-    dlist, plist = pop_calc(delta_c, omega_p, omega_c, spontaneous_32, 
-                            spontaneous_21, lw_probe, lw_coupling, dmin, dmax, steps, state_index, 
-                            gauss, temperature, kp, kc, beamdiv, probe_diameter, coupling_diameter, tt)
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    plt.title(f"{state} population")
-    if dmax - dmin >= 1e6:
-        ax.plot(dlist/(1e6), plist, color="orange", label="$\Omega_c=$" f"{omega_c:.2e} $Hz$"\
-                "\n" "$\Omega_p=$" f"{omega_p:.2e} $Hz$" "\n" \
-                "$\Gamma_{c}$" f"= {spontaneous_32/(2*np.pi):.2e} $Hz$" "\n" \
-                "$\Gamma_{p}$" f"= {spontaneous_21/(2*np.pi):.2e} $Hz$" "\n"\
-                "$\Delta_c =$" f"{delta_c/1e6:.2f} $Hz$" "\n" \
-                f"$\gamma_p$ = {lw_probe:.2e} $Hz$" "\n" 
-                f"$\gamma_c$ = {lw_coupling:.2e} $Hz$")
-        ax.set_xlabel(r"$\Delta_p$ / MHz")
-    else:
-        ax.plot(dlist/(1e3), plist, color="orange", label="$\Omega_c=$" f"{omega_c:.2e} $Hz$"\
-                "\n" "$\Omega_p=$" f"{omega_p:.2e} $Hz$" "\n" \
-                "$\Gamma_{c}$" f"= {spontaneous_32/(2*np.pi):.2e} $Hz$" "\n" \
-                "$\Gamma_{p}$" f"= {spontaneous_21/(2*np.pi):.2e} $Hz$" "\n"\
-                "$\Delta_c =$" f"{delta_c/1e6:.2f} $Hz$" "\n" \
-                f"$\gamma_p$ = {lw_probe:.2e} $Hz$" "\n" 
-                f"$\gamma_c$ = {lw_coupling:.2e} $Hz$")
-        ax.set_xlabel(r"$\Delta_p$ / kHz")
-    ax.set_ylabel(f"{state} state popultaion")
-    ax.legend()
-    plt.show()
-
 def transmission(delta_p, delta_c, omega_p, omega_c, spontaneous_32, 
                  spontaneous_21, lw_probe, lw_coupling, density, dig, kp, sl, 
                  temperature, probe_diameter, coupling_diameter, tt):
@@ -359,15 +416,38 @@ def transmission(delta_p, delta_c, omega_p, omega_c, spontaneous_32,
     This function calculates a transmission value for a given set of parameters
     Parameters
     ----------
-    density : float
-        Number density of atoms in the sample.   
     delta_p : float
-        Probe detuning in Hz.
+        Probe detuning in rad/s
     delta_c : float
-        Coupling detuning in Hz.
+        Coupling detuning in rad/s
+    omega_p : float
+        Probe Rabi frequency in rad/s
+    omega_c : float
+        Coupling Rabi frequency in rad/s
+    spontaneous_32 : float
+        state 3 to state 2 spontaneous emission rate in rad/s
+    spontaneous_21 : float
+        state 2 to state 1 spontaneous emission rate in rad/s
+    lw_probe : float
+        Probe beam linewidth in rad/s
+    lw_coupling : float
+        Coupling beam linewidth rad/s
+    density : float
+        Number density of atoms in the sample.
+    dig : float
+        Probe transition diple matrix element in Cm
+    kp : float
+        Probe transition wavenumber in m^-1
     sl : float
         Atomic beam diameter
-
+    temperature : float
+        Temperature of the oven in Kelvin
+    probe_diameter: float
+        Circular probe laser diameter in metres
+    coupling_diameter: float
+        Circular coupling laser diameter in metres
+    tt : string
+        Enter argument "Y" for transit time to be included    
     Returns
     -------
     T : float
@@ -391,13 +471,45 @@ def tcalc(delta_c, omega_p, omega_c, spontaneous_32,
     Parameters
     ---------- 
     delta_c : float
-        Coupling detuning in Hz.
+        Coupling detuning in rad/s
+    omega_p : float
+        Probe Rabi frequency in rad/s
+    omega_c : float
+        Coupling Rabi frequency in rad/s
+    spontaneous_32 : float
+        state 3 to state 2 spontaneous emission rate in rad/s
+    spontaneous_21 : float
+        state 2 to state 1 spontaneous emission rate in rad/s
+    lw_probe : float
+        Probe beam linewidth in rad/s
+    lw_coupling : float
+        Coupling beam linewidth rad/s
     dmin : float
-        Lower bound of Probe detuning in MHz
+        Lower bound of Probe detuning in angular MHz
     dmax : float
-        Upper bound of Probe detuning in MHz
+        Upper bound of Probe detuning in angular MHz
     steps : int
-        Number of Probe detunings to calculate the transmission at 
+        Number of Probe detunings to calculate the population probability
+    gauss : string
+        Enter argument "Y" to include Doppler broadening
+    kp : float
+        Probe transition wavenumber in m^-1
+    kc : float
+        Coupling transition wavenumber in m^-1
+    density : float
+        Number density of atoms in the sample.
+    dig : float
+        Probe transition diple matrix element in Cm
+    sl : float
+        Atomic beam diameter
+    temperature : float
+        Temperature of the oven in Kelvin
+    probe_diameter: float
+        Circular probe laser diameter in metres
+    coupling_diameter: float
+        Circular coupling laser diameter in metres
+    tt : string
+        Enter argument "Y" for transit time to be included   
 
     Returns
     -------
@@ -410,13 +522,12 @@ def tcalc(delta_c, omega_p, omega_c, spontaneous_32,
     iters = np.empty(steps+1, dtype=tuple)
     dlist = np.linspace(dmin, dmax, steps+1)
     if gauss == "Y":
-        mp = np.sqrt(3/2)*v_mp(temperature)
-        print(mp)
+        sigma = beamdiv*np.sqrt(3/2)*u(temperature)
         elem = 1,0
         for i in range(0, steps+1):
             iters[i] = (dlist[i], delta_c, omega_p, omega_c, 
                         spontaneous_32, spontaneous_21, lw_probe, 
-                        lw_coupling, mp, kp, kc, elem, beamdiv, 
+                        lw_coupling, sigma, kp, kc, elem, beamdiv, 
                         temperature, probe_diameter, coupling_diameter, tt)
         rhos = np.array(parallel_progbar(doppler_int, iters, starmap=True))
         chi_imag = (-2*density*dig**2*rhos)/(hbar*epsilon_0*omega_p)
@@ -431,47 +542,20 @@ def tcalc(delta_c, omega_p, omega_c, spontaneous_32,
         tlist = np.array(parallel_progbar(transmission, iters, starmap=True))
     return dlist, tlist
     
-def trans_plot(delta_c, omega_p, omega_c, spontaneous_32, 
-             spontaneous_21, lw_probe, lw_coupling, dmin, dmax, steps, 
-             gauss, kp, kc, density, dig, sl, temperature, beamdiv, 
-             probe_diameter, coupling_diameter, tt):
-    """
-    This function plots probe beam transmission for an array of probe detunings
-    Parameters
-    ---------- 
-    delta_c : float
-        Coupling detuning in Hz.
-    dmin : float
-        Lower bound of Probe detuning in MHz
-    dmax : float
-        Upper bound of Probe detuning in MHz
-    steps : int
-        Number of Probe detunings to calculate the transmission at 
-
-    Returns
-    -------
-    T : plot
-        Plot of probe beam transmission against probe detuning, with EIT FWHM
-
-    """
-    dlist, tlist = tcalc(delta_c, omega_p, omega_c, spontaneous_32, 
-                         spontaneous_21, lw_probe, lw_coupling, dmin, dmax, 
-                         steps, gauss, kp, kc, density, dig, sl, temperature, beamdiv, 
-                         probe_diameter, coupling_diameter, tt)
-
-    
 def FWHM(dlist, tlist):
     """
     This function calculates the FWHM of the EIT peak in a spectrum
     Parameters
     ----------
-    t : numpy.ndarray, dtype = float
-        Calculated transmission values for a range of detunings
+    dlist : numpy.ndarray, dtype = float64
+        Array of Probe detunings
+    tlist : numpy.ndarray, dtype = float64
+        Array of transmission values corresponding to the detunings
 
     Returns
     -------
-    pw : float
-        The FWHM of the EIT Peak in MHz
+    Peak width : float
+        The FWHM of the EIT Peak in angular MHz
 
     """
     peak = find_peaks(tlist, distance = 999)[0]
@@ -483,6 +567,21 @@ def FWHM(dlist, tlist):
         return 0
 
 def contrast(dlist, tlist):
+    """
+    This function calculates the contrast of the EIT peak in a spectrum
+    Parameters
+    ----------
+    dlist : numpy.ndarray, dtype = float64
+        Array of Probe detunings
+    tlist : numpy.ndarray, dtype = float64
+        Array of transmission values corresponding to the detunings
+
+    Returns
+    -------
+    Contrast : float
+        The contrast of the EIT Peak
+
+    """
     peak = find_peaks(tlist, distance = 999)[0]
     contrast = peak_prominences(tlist, peak)
     try:
@@ -490,14 +589,55 @@ def contrast(dlist, tlist):
     except:
         return 0
 
-def v_mp(T):
+def u(T):
+    """
+    This function calculates most probable speed of a 
+    strontium atom moving in a gas
+    ----------
+    T : float
+        Temperature of the oven in Kelvin
+
+    Returns
+    -------
+    u: float
+        Most probable speed of a strontium atom moving in a gas in m/s
+
+    """
     return np.sqrt(2*k*(T)/(88*1.6605390666e-27))
 
-def maxwell_long(v, mp):
-    return 2*(v**3/mp**4)*np.exp(-(v**2/mp**2))
+def maxwell_long(v, u):
+    """
+    This function calculates the longitudinal velocity 
+    distribution of strontium atoms moving in a beam
+    ----------
+    v : float
+        Velocity of strontium atom in m/s
+    u: float
+        Most probable speed of a strontium atom moving in a gas in m/s
 
-def maxwell_trans(v, mp):
-    return 1/(np.sqrt(2*np.pi)*mp)*np.exp(-(v**2/(2*mp**2)))
+    Returns
+    -------
+    f(vl) : float
+        Probability density of finding an atom with a given longitudinal velocity
 
-def effectiveT(mp):
-    return ((mp**2*(88*1.6605390666e-27))/(2*k))
+    """
+    return 2*(v**3/u**4)*np.exp(-(v**2/u**2))
+
+def maxwell_trans(v, sigma):
+    """
+    This function calculates the transvers velocity 
+    distribution of strontium atoms moving in a beam
+    ----------
+    v : float
+        Velocity of strontium atom in m/s
+    sigma: float
+        Width of the transverse velocity distribution in m/s
+
+    Returns
+    -------
+    f(vt) : float
+        Probability density of finding an atom with a given transverse velocity
+
+    """
+    return 1/(np.sqrt(2*np.pi)*sigma)*np.exp(-(v**2/(2*sigma**2)))
+

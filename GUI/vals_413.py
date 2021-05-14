@@ -32,24 +32,43 @@ with open("rydberg_vals.csv", "rt") as file:
             pass
 
 def func_omega_c_413(Ic, d_23):
+    """
+    Calculates coupling Rabi frequency for a given intensity
+    and transition dipole matrix element
+    """
     return (d_23/hbar)*np.sqrt((2*Ic)/(c*epsilon_0))
 
 def func_omega_p_413(Ip):
+    """
+    Calculates probe Rabi frequency for a given intensity
+    """
     return (d12_413/hbar)*np.sqrt((2*Ip)/(c*epsilon_0))
 
 def func_Ic_413(cp, cd):
+    """
+    Calculates intensity for a given laser power and diameter
+    """
     return cp/(np.pi*(cd/2)**2)
 
 def func_Ip_413(pp, pd):
+    """
+    Calculates intensity for a given laser power and diameter
+    """
     return pp/(np.pi*(pd/2)**2)
 
 def func_spon_413(n, series):
+    """
+    Returns the spontaneous emission rate of a given Rydberg state
+    """
     if series == "1S0":
         return 1/state_1S0(n)
     if series == "1D2":
         return 1/state_1D2(n)
     
 def func_d23_413(n, series):
+    """
+    Returns the transition dipole matrix element of a given Rydberg state
+    """
     if series == "1D2":
         try:
             return np.sqrt((3*os_1D2[str(n)]*hbar*wl_1D2[str(n)]*1e-9*e**2)/(4*np.pi*m_e*c))
@@ -57,6 +76,9 @@ def func_d23_413(n, series):
             return 0
 
 def func_kc_413(n, series):
+    """
+    Returns the wavenumber of a given Rydberg state
+    """
     if series == "1D2":
         try:
             return 2*np.pi/(wl_1D2[str(n)]*1e-9)

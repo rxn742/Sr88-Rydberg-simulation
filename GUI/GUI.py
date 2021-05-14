@@ -23,6 +23,10 @@ import matplotlib.pyplot as plt
 class UI(QMainWindow):
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialisation of the GUI window and all of its
+        features
+        """
         self.spontaneous_21_413 = spontaneous_21_413
         self.spontaneous_21_318 = spontaneous_21_318
         super(UI, self).__init__(*args, **kwargs)
@@ -45,6 +49,10 @@ class UI(QMainWindow):
         self.add_images()
     
     def add_toolbar(self):
+        """
+        Defines buttons on the bottom toolbar and 
+        their links to different functions
+        """
         self.toolbar = QToolBar()
         self.addToolBar(Qt.BottomToolBarArea, self.toolbar)
         self.load_button = QAction("Load CSV", self)
@@ -73,6 +81,9 @@ class UI(QMainWindow):
         self.exit_button.triggered.connect(self.close)
         
     def add_images(self):
+        """
+        Adds the images to the RHS of the window
+        """
         self.leveldiagram = QLabel()
         self.levelpixmap = QPixmap('imgs/orig.png')
         self.leveldiagram.setPixmap(self.levelpixmap)
@@ -87,8 +98,12 @@ class UI(QMainWindow):
         self.rightLayout.addWidget(self.pow_label, alignment=Qt.AlignHCenter | Qt.AlignCenter)
     
     def add_dropdowns(self):
+        """
+        Adds the dropdown selectors for choosing the Rydberg series and
+        input method for laser parameters
+        """
         self.system_choice = QComboBox()
-        self.system_choice.addItems(["Sr88 1D2 Series", "Sr88 3D3 Series"])
+        self.system_choice.addItems(["Sr88 1D2 Series", "Sr88 3D2 Series"])
         self.system_choice.setCurrentIndex(0)
         self.leftLayout.addWidget(self.system_choice)
         self.input_type = QComboBox()
@@ -99,12 +114,18 @@ class UI(QMainWindow):
         
         
     def add_checkboxes(self):
+        """
+        Adds the checkboxes for Doppler and Transit-time broadening
+        """
         self.doppler = QCheckBox("Include Doppler Broadening?")
         self.transit = QCheckBox ("Include Transit Time Broadening?")
         self.leftLayout.addWidget(self.doppler)
         self.leftLayout.addWidget(self.transit)
         
     def add_inputs(self):
+        """
+        Adds the labels and text boxes for entering the model parameters
+        """
         self.labels = {}
         self.boxes = {}
         inputs_layout = QGridLayout()
@@ -164,22 +185,39 @@ class UI(QMainWindow):
         self.leftLayout.addLayout(inputs_layout)
 
     def get_text(self, parameter):
+        """
+        Retrieves the value in the box for a given model parameter
+        """
         return self.boxes[parameter].text()
     
     def set_text (self, parameter, text):
+        """
+        Overwrites the value in the box for a given model parameter
+        """
         self.boxes[parameter].setText(text)
 
     def clear_text(self):
+        """
+        Clears the value of a given box
+        """
         for parameter, val in self.boxes.items():
             self.set_text(parameter, "")
         
     def get_params(self):
+        """
+        Retrieves the model parameters from the boxes and stores
+        them in a dictionary with keyword arguments
+        """
         sim_vals = {}
         for param, box in self.boxes.items():
             sim_vals[param] = self.get_text(param)
         return sim_vals
         
     def transmission(self):
+        """
+        Calculates the probe transmission spectrum
+        for a given set of entered model parameters
+        """
         vals = self.get_params()
         for param, val in vals.items():
             if vals[param] == "0":
@@ -281,6 +319,10 @@ class UI(QMainWindow):
             self.t_plotter(dlist, tlist)
         
     def population(self):
+        """
+        Calculates the steady state population spectrum of any state
+        for a given set of model parameters
+        """
         vals = self.get_params()
         for param, val in vals.items():
             if vals[param] == "":
@@ -383,6 +425,10 @@ class UI(QMainWindow):
             return
             
     def load_csv(self):
+        """
+        Allows loading in of previously saved model parameters
+        in a .csv file
+        """
         dlg = QFileDialog()
         dlg.setFileMode(QFileDialog.AnyFile)
         dlg.setNameFilter("csv (*.csv)")
@@ -405,6 +451,10 @@ class UI(QMainWindow):
                 self.set_text(param, val)
             
     def save_csv(self):
+        """
+        Allows saving of model parameters in a .csv file
+        to reload in later
+        """
         dlg = QFileDialog()
         self.filename = dlg.getSaveFileName(self, 'Save File')[0]
         if self.filename == "":
@@ -418,6 +468,10 @@ class UI(QMainWindow):
                 write.writerow([param, val])                        
         
     def grey(self, i):
+        """
+        Limits boxes which are not necesary on the interface to
+        read only when they are not needed
+        """
         if i == 0:
             self.set_text("Ip", "")
             self.set_text("Ic", "")
@@ -451,6 +505,10 @@ class UI(QMainWindow):
             self.boxes["omega_c"].setReadOnly(False)
             
     def showdialog(self):
+        """
+        Brings up a dialog box which allows selection of which
+        state population to plot
+        """
         self.d = QDialog()
         self.dd = QComboBox(self.d)
         self.dd.move(100, 0)
@@ -465,6 +523,10 @@ class UI(QMainWindow):
         self.d.exec_()
         
     def state(self):
+        """
+        Converts dialog box value back into choice of state
+        that the model accepts
+        """
         if self.dd.currentIndex() == 0:
             self.state_number = "Ground"
             self.state_index = 0,0
@@ -477,6 +539,9 @@ class UI(QMainWindow):
         self.d.close()
         
     def save_dialog(self, event):
+        """
+        Allows saving of plot data upon closing the figure
+        """
         box = QMessageBox.question(self, 'Save', 'Do you want to save data as a .csv?')
         if box == QMessageBox.Yes:
             dlg = QFileDialog()
@@ -497,7 +562,10 @@ class UI(QMainWindow):
                     
     
     def t_plotter(self, dlist, tlist):
-        """ Plotting"""
+        """
+        Creates the figure and legend for a given array of probe 
+        transmission values and probe detunings
+        """
         if self.system_choice.currentIndex() == 0:
             self.spontaneous_21 = self.spontaneous_21_413
             self.spontaneous_32 = self.spontaneous_32_413
@@ -550,6 +618,10 @@ class UI(QMainWindow):
         fig.canvas.mpl_connect('close_event', self.save_dialog)
         
     def p_plotter(self, dlist, plist):
+        """
+        Creates the figure and legend for a given array of steady state
+        populations and probe detunings
+        """
         if self.system_choice.currentIndex() == 0:
             self.spontaneous_21 = self.spontaneous_21_413
             self.spontaneous_32 = self.spontaneous_32_413
@@ -580,28 +652,45 @@ class UI(QMainWindow):
                 f"$\gamma_p$ = {self.vals['lwp']:.2e} $Hz$" "\n" 
                 f"$\gamma_c$ = {self.vals['lwc']:.2e} $Hz$")
             ax.set_xlabel(r"$\Delta_p$ / kHz")
-        ax.set_ylabel(f"{self.state_number} state popultaion")
+        ax.set_ylabel(f"{self.state_number} state popultaion probability")
         ax.legend()
         plt.show()
         fig.canvas.mpl_connect('close_event', self.save_dialog)
         
     def dme(self):
+        """
+        Brings up a warning box if the dipole matrix element for
+        an entered n level state is not found
+        """
         QMessageBox.about(self, "Dipole Matrix Element", 
         "Dipole matrix element not found! \n \nConsult readme for valid n levels")
 
     def power_warn(self):
+        """
+        Brings up a warning box if laser powers enetered incorrectly
+        """
         QMessageBox.about(self, "Powers and Diameters", 
         "Please enter valid laser powers and diameters")
 
     def intensity_warn(self):
+        """
+        Brings up a warning box if laser intensities enetered incorrectly
+        """
         QMessageBox.about(self, "Intensities", 
         "Please enter valid laser intensities")
 
     def transit_warn(self):
+        """
+        Brings up a warning box if laser diameters enetered incorrectly
+        and transit time is selected
+        """
         QMessageBox.about(self, "Transit time", 
         "Transit time cannot be included without specifying laser diameters")
         
     def rabi_warn(self):
+        """
+        Brings up a warning box if Rabi frequencies enetered incorrectly
+        """
         QMessageBox.about(self, "Rabi frequencies", 
         "Please enter valid Rabi frequencies")
         

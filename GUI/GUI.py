@@ -9,10 +9,11 @@ from multiprocessing import set_start_method
 import csv
 import sys
 import numpy as np
+from scipy.constants import c
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-from backend import tcalc, pop_calc, FWHM, contrast
+from backend import tcalc, pop_calc, FWHM, contrast, ncalc
 from vals_413 import d12_413, func_d23_413, func_spon_413, spontaneous_21_413, kp_413, \
                         func_Ic_413, func_Ip_413, func_omega_c_413, func_omega_p_413, func_kc_413
 from vals_318 import d12_318, func_d23_318, kp_318, func_spon_318, spontaneous_21_318,\
@@ -75,6 +76,10 @@ class UI(QMainWindow):
         self.pop_button.setStatusTip("Plot Population")
         self.toolbar.addAction(self.pop_button)
         self.pop_button.triggered.connect(self.population)
+        self.sl_button = QAction("Plot Group Index", self)
+        self.sl_button.setStatusTip("Plot Group Index")
+        self.toolbar.addAction(self.sl_button)
+        self.sl_button.triggered.connect(self.slowlight)
         self.exit_button = QAction("Exit", self)
         self.exit_button.setStatusTip("Exit")
         self.toolbar.addAction(self.exit_button)
@@ -423,6 +428,112 @@ class UI(QMainWindow):
                 self.p_plotter(dlist, plist)
         except:
             return
+
+
+    def slowlight(self):
+        """
+        Calculates the probe transmission spectrum
+        for a given set of entered model parameters
+        """
+        vals = self.get_params()
+        for param, val in vals.items():
+            if vals[param] == "0":
+                vals[param] = 0
+            if vals[param] == "":
+                vals[param] = 0
+            else:
+                vals[param] = float(val)
+        vals["dmin"] = int(vals["dmin"])
+        vals["dmax"] = int(vals["dmax"])
+        vals["steps"] = int(vals["steps"])
+        vals["n"] = int(vals["n"])
+        self.vals = vals
+        
+        if self.system_choice.currentIndex() == 0:
+            d23_413 = func_d23_413(vals["n"], "1D2")
+            kc_413 = func_kc_413(vals["n"], "1D2")
+            if self.input_type.currentIndex() == 0:
+                if d23_413 == 0:
+                    self.dme()
+                    return
+                if vals["pp"] == 0 or vals["cp"] == 0 or vals["pd"] == 0 or vals["cd"] == 0:
+                    self.power_warn()
+                    return
+                vals["Ip"] = func_Ip_413(vals["pp"], vals["pd"])
+                vals["Ic"] = func_Ic_413(vals["cp"], vals["cd"])
+                vals["omega_p"] = func_omega_p_413(vals["Ip"])
+                vals["omega_c"] = func_omega_c_413(vals["Ic"], d23_413)
+            if self.input_type.currentIndex() == 1:
+                if d23_413 == 0:
+                    self.dme()
+                    return
+                if vals["Ip"] == 0 or vals["Ic"] == 0:
+                    self.intensity_warn()
+                    return
+                vals["omega_p"] = func_omega_p_413(vals["Ip"])
+                vals["omega_c"] = func_omega_c_413(vals["Ic"], d23_413)
+            if self.input_type.currentIndex() == 2:
+                if vals["omega_p"] == 0 or vals["omega_c"] == 0:
+                    self.rabi_warn()
+                    return
+        
+        if self.system_choice.currentIndex() == 1:
+            d23_318 = func_d23_318(vals["n"], "3D3")
+            kc_318 = func_kc_318(vals["n"], "3D3")
+            print(kc_318)
+            if self.input_type.currentIndex() == 0:
+                if d23_318 == 0:
+                    self.dme()
+                    return
+                if vals["pp"] == 0 or vals["cp"] == 0 or vals["pd"] == 0 or vals["cd"] == 0:
+                    self.power_warn()
+                    return
+                vals["Ip"] = func_Ip_318(vals["pp"], vals["pd"])
+                vals["Ic"] = func_Ic_318(vals["cp"], vals["cd"])
+                vals["omega_p"] = func_omega_p_318(vals["Ip"])
+                vals["omega_c"] = func_omega_c_318(vals["Ic"], d23_318)
+            if self.input_type.currentIndex() == 1:
+                if d23_318 == 0:
+                    self.dme()
+                    return
+                if vals["Ip"] == 0 or vals["Ic"] == 0:
+                    self.intensity_warn()
+                    return
+                vals["omega_p"] = func_omega_p_318(vals["Ip"])
+                vals["omega_c"] = func_omega_c_318(vals["Ic"], d23_318)
+            if self.input_type.currentIndex() == 2:
+                if vals["omega_p"] == 0 or vals["omega_c"] == 0:
+                    self.rabi_warn()
+                    return        
+        if self.doppler.isChecked():
+            gauss = "Y"
+        else:
+            gauss = "N"
+
+        if self.transit.isChecked():
+            if vals["pd"] == 0:
+                self.transit_warn()
+                return
+            if vals["cd"] == 0:
+                self.transit_warn()
+                return
+            tt = "Y"
+        else:
+            tt = "N"
+        
+        if self.system_choice.currentIndex() == 0:
+            self.spontaneous_32_413 = func_spon_413(vals["n"], "1D2")
+            dlist, nlist = ncalc(vals["delta_c"], vals["omega_p"], vals["omega_c"], self.spontaneous_32_413, self.spontaneous_21_413, 
+                       vals["lwp"], vals["lwc"], vals["dmin"], vals["dmax"], vals["steps"], gauss, kp_413, kc_413, 
+                       vals["density"], d12_413, vals["sl"], vals["T"], vals["alpha"], vals["pd"], vals["cd"], tt)
+            self.n_plotter(dlist, nlist)
+            
+        if self.system_choice.currentIndex() == 1:
+            self.spontaneous_32_318 = func_spon_318(vals["n"], "3D3")
+            dlist, nlist = ncalc(vals["delta_c"], vals["omega_p"], vals["omega_c"], self.spontaneous_32_318, self.spontaneous_21_318, 
+                       vals["lwp"], vals["lwc"], vals["dmin"], vals["dmax"], vals["steps"], gauss, kp_318, kc_318, 
+                       vals["density"], d12_318, vals["sl"], vals["T"], vals["alpha"], vals["pd"], vals["cd"], tt)
+            self.n_plotter(dlist, nlist)
             
     def load_csv(self):
         """
@@ -557,6 +668,8 @@ class UI(QMainWindow):
                     write.writerow(["Probe Detununing", "Probe Transmission"])
                 if self.typ == "p":
                     write.writerow(["Probe Detununing", f"{self.state_number} Population"])
+                if self.typ == "n":
+                    write.writerow(["Probe Detununing", "Group Index"])
                 for i in range(len(self.dlist)):
                     write.writerow([self.dlist[i], self.flist[i]])
                     
@@ -653,6 +766,53 @@ class UI(QMainWindow):
                 f"$\gamma_c$ = {self.vals['lwc']:.2e} $Hz$")
             ax.set_xlabel(r"$\Delta_p$ / kHz")
         ax.set_ylabel(f"{self.state_number} state popultaion probability")
+        ax.legend()
+        plt.show()
+        fig.canvas.mpl_connect('close_event', self.save_dialog)
+
+    def n_plotter(self, dlist, nlist):
+        """
+        Creates the figure and legend for a given array of probe 
+        transmission values and probe detunings
+        """
+        if self.system_choice.currentIndex() == 0:
+            self.spontaneous_21 = self.spontaneous_21_413
+            self.spontaneous_32 = self.spontaneous_32_413
+        if self.system_choice.currentIndex() == 1:
+            self.spontaneous_21 = self.spontaneous_21_318
+            self.spontaneous_32 = self.spontaneous_32_318
+        self.dlist = dlist
+        self.flist = nlist
+        print(FWHM(dlist, nlist))
+        self.typ = "n"
+        fig = plt.figure(figsize=(8, 6))
+        ax = fig.add_subplot(111)
+        """ Geometric library to calculate linewidth of EIT peak (FWHM) """
+        max_gi = np.max(nlist)
+        group_vel = c/max_gi
+        if max_gi != 0:
+            ax.text(0.8, 0.07, f"Max $n_g$ = {max_gi:.0f}", transform=ax.transAxes, fontsize=10, va='center', ha='center')
+            ax.text(0.8, 0.13, f"Min $v_g$ = {group_vel:.0f} $m/s$", transform=ax.transAxes, fontsize=10, va='center', ha='center')                     
+        plt.title(r"Group refractive index against probe beam detuning")
+        if dlist[-1]-dlist[0] >= 1e6:
+            ax.plot(dlist/(1e6), nlist, color="orange", label="$\Omega_c=$" f"{self.vals['omega_c']:.2e} $Hz$"\
+                "\n" "$\Omega_p=$" f"{self.vals['omega_p']:.2e} $Hz$" "\n" \
+                "$\Gamma_{c}$" f"= {self.spontaneous_32/(2*np.pi):.2e} $Hz$" "\n" \
+                "$\Gamma_{p}$" f"= {self.spontaneous_21/(2*np.pi):.2e} $Hz$" "\n"\
+                "$\Delta_c =$" f"{self.vals['delta_c']/1e6:.2f} $Hz$" "\n" \
+                f"$\gamma_p$ = {self.vals['lwp']:.2e} $Hz$" "\n" 
+                f"$\gamma_c$ = {self.vals['lwc']:.2e} $Hz$")
+            ax.set_xlabel(r"$\Delta_p$ / MHz")
+        else:
+            ax.plot(dlist/(1e3), nlist, color="orange", label="$\Omega_c=$" f"{self.vals['omega_c']:.2e} $Hz$"\
+                "\n" "$\Omega_p=$" f"{self.vals['omega_p']:.2e} $Hz$" "\n" \
+                "$\Gamma_{c}$" f"= {self.spontaneous_32/(2*np.pi):.2e} $Hz$" "\n" \
+                "$\Gamma_{p}$" f"= {self.spontaneous_21/(2*np.pi):.2e} $Hz$" "\n"\
+                "$\Delta_c =$" f"{self.vals['delta_c']/1e6:.2f} $Hz$" "\n" \
+                f"$\gamma_p$ = {self.vals['lwp']:.2e} $Hz$" "\n" 
+                f"$\gamma_c$ = {self.vals['lwc']:.2e} $Hz$")
+            ax.set_xlabel(r"$\Delta_p$ / kHz")
+        ax.set_ylabel(r"Group Index")
         ax.legend()
         plt.show()
         fig.canvas.mpl_connect('close_event', self.save_dialog)

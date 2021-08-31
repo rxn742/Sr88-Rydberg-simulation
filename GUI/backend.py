@@ -546,7 +546,7 @@ def ncalc(delta_c, omega_p, omega_c, spontaneous_32,
                     spontaneous_32, spontaneous_21, lw_probe, 
                     lw_coupling, density, dig, kp, sl, temperature, 
                     probe_diameter, coupling_diameter, tt)
-    n_real = np.array(parallel_progbar(transmission, iters, starmap=True))
+    n_real = np.array(parallel_progbar(refractiveindex, iters, starmap=True))
     
     w_21 = c * 2*np.pi/(461e-9) # probe transition frequency
     

@@ -9,7 +9,7 @@ from miniutils import parallel_progbar
 import qutip as qt
 qt.settings.auto_tidyup=False
 import numpy as np
-from scipy.constants import hbar, epsilon_0, k
+from scipy.constants import hbar, epsilon_0, k, c
 import matplotlib.pyplot as plt
 from scipy.integrate import quad
 from scipy.signal import find_peaks, peak_widths, peak_prominences
@@ -408,6 +408,150 @@ def pop_calc(delta_c, omega_p, omega_c, spontaneous_32,
         plist = parallel_progbar(population, iters, starmap=True)
         plist = np.array(np.abs([x[state_index] for x in plist]))
     return dlist, plist
+
+def refractiveindex(delta_p, delta_c, omega_p, omega_c, spontaneous_32, 
+                 spontaneous_21, lw_probe, lw_coupling, density, dig, kp, sl, 
+                 temperature, probe_diameter, coupling_diameter, tt):
+    """
+    This function calculates a refractive index for a given set of parameters
+    Parameters
+    ----------
+    delta_p : float
+        Probe detuning in rad/s
+    delta_c : float
+        Coupling detuning in rad/s
+    omega_p : float
+        Probe Rabi frequency in rad/s
+    omega_c : float
+        Coupling Rabi frequency in rad/s
+    spontaneous_32 : float
+        state 3 to state 2 spontaneous emission rate in rad/s
+    spontaneous_21 : float
+        state 2 to state 1 spontaneous emission rate in rad/s
+    lw_probe : float
+        Probe beam linewidth in rad/s
+    lw_coupling : float
+        Coupling beam linewidth rad/s
+    density : float
+        Number density of atoms in the sample.
+    dig : float
+        Probe transition diple matrix element in Cm
+    kp : float
+        Probe transition wavenumber in m^-1
+    sl : float
+        Atomic beam diameter
+    temperature : float
+        Temperature of the oven in Kelvin
+    probe_diameter: float
+        Circular probe laser diameter in metres
+    coupling_diameter: float
+        Circular coupling laser diameter in metres
+    tt : string
+        Enter argument "Y" for transit time to be included    
+    Returns
+    -------
+    T : float
+        Relative probe transmission value for the given parameters
+
+    """
+    p = population(delta_p, delta_c, omega_p, omega_c, spontaneous_32, 
+                   spontaneous_21, lw_probe, lw_coupling, temperature, 
+                   probe_diameter, coupling_diameter, tt)[1,0] # element rho_ig
+    chi = (-2*density*dig**2*p)/(hbar*epsilon_0*omega_p) # calculate susceptibility
+    a = kp*np.abs(chi.imag) # absorption coefficient
+    
+    n_real = np.sqrt(1+np.real(chi)) #phase index of refraction
+    
+
+    return n_real
+
+
+def ncalc(delta_c, omega_p, omega_c, spontaneous_32, 
+             spontaneous_21, lw_probe, lw_coupling, dmin, dmax, steps, 
+             gauss, kp, kc, density, dig, sl, temperature, beamdiv, probe_diameter, coupling_diameter, tt):
+    """
+    This function generates an array of group refractive indicies for a generated list of probe detunings
+    Parameters
+    ---------- 
+    delta_c : float
+        Coupling detuning in rad/s
+    omega_p : float
+        Probe Rabi frequency in rad/s
+    omega_c : float
+        Coupling Rabi frequency in rad/s
+    spontaneous_32 : float
+        state 3 to state 2 spontaneous emission rate in rad/s
+    spontaneous_21 : float
+        state 2 to state 1 spontaneous emission rate in rad/s
+    lw_probe : float
+        Probe beam linewidth in rad/s
+    lw_coupling : float
+        Coupling beam linewidth rad/s
+    dmin : float
+        Lower bound of Probe detuning in angular MHz
+    dmax : float
+        Upper bound of Probe detuning in angular MHz
+    steps : int
+        Number of Probe detunings to calculate the population probability
+    gauss : string
+        Enter argument "Y" to include Doppler broadening
+    kp : float
+        Probe transition wavenumber in m^-1
+    kc : float
+        Coupling transition wavenumber in m^-1
+    density : float
+        Number density of atoms in the sample.
+    dig : float
+        Probe transition diple matrix element in Cm
+    sl : float
+        Atomic beam diameter
+    temperature : float
+        Temperature of the oven in Kelvin
+    probe_diameter: float
+        Circular probe laser diameter in metres
+    coupling_diameter: float
+        Circular coupling laser diameter in metres
+    tt : string
+        Enter argument "Y" for transit time to be included   
+
+    Returns
+    -------
+    dlist : numpy.ndarray, dtype = float64
+        Array of Probe detunings
+    tlist : numpy.ndarray, dtype = float64
+        Array of transmission values corresponding to the detunings
+
+    """
+
+    iters = np.empty(steps+1, dtype=tuple)
+    dlist = np.linspace(dmin, dmax, steps+1)
+    
+# =============================================================================
+#     if gauss == "Y":
+#         sigma = beamdiv*np.sqrt(3/2)*u(temperature)
+#         elem = 1,0
+#         for i in range(0, steps+1):
+#             iters[i] = (dlist[i], delta_c, omega_p, omega_c, 
+#                         spontaneous_32, spontaneous_21, lw_probe, 
+#                         lw_coupling, sigma, kp, kc, elem, beamdiv, 
+#                         temperature, probe_diameter, coupling_diameter, tt)
+#         rhos = np.array(parallel_progbar(doppler_int, iters, starmap=True))
+#         chi_imag = (-2*density*dig**2*rhos)/(hbar*epsilon_0*omega_p)
+#         a = kp*np.abs(chi_imag)
+#         tlist = np.exp(-a*sl)
+#     else:
+# =============================================================================
+    for i in range(0, steps+1):
+        iters[i] = (dlist[i], delta_c, omega_p, omega_c, 
+                    spontaneous_32, spontaneous_21, lw_probe, 
+                    lw_coupling, density, dig, kp, sl, temperature, 
+                    probe_diameter, coupling_diameter, tt)
+    n_real = np.array(parallel_progbar(transmission, iters, starmap=True))
+    
+    w_21 = c * 2*np.pi/(461e-9) # probe transition frequency
+    
+    n_g = n_real[:-1] + (dlist[:-1] + w_21) * np.diff(n_real)/np.diff(dlist)
+    return dlist[:-1], n_g
 
 def transmission(delta_p, delta_c, omega_p, omega_c, spontaneous_32, 
                  spontaneous_21, lw_probe, lw_coupling, density, dig, kp, sl, 

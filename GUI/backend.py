@@ -224,7 +224,7 @@ def population(delta_p, delta_c, omega_p, omega_c, spontaneous_32, spontaneous_2
 
 def doppler(v, delta_p, delta_c, omega_p, omega_c, spontaneous_32,
             spontaneous_21, lw_probe, lw_coupling, sigma, kp, kc, state_index, 
-            temperature, probe_diameter, coupling_diameter, tt):
+            temperature, probe_diameter, coupling_diameter, tt, gauss):
     """
     This function generates the integrand to solve when including Doppler broadening
     Parameters
@@ -271,18 +271,43 @@ def doppler(v, delta_p, delta_c, omega_p, omega_c, spontaneous_32,
 
     """
     if state_index == (1,0):
-        integrand = np.imag(population(delta_p-kp*v, delta_c+kc*v, omega_p, 
-        omega_c, spontaneous_32, spontaneous_21, lw_probe, lw_coupling, 
-        temperature, probe_diameter, coupling_diameter, tt)[state_index]*maxwell_trans(v, sigma))
+        if gauss == "Beam":
+            integrand = np.imag(population(delta_p-kp*v, delta_c+kc*v, omega_p, 
+            omega_c, spontaneous_32, spontaneous_21, lw_probe, lw_coupling, 
+            temperature, probe_diameter, coupling_diameter, tt)[state_index]*maxwell_trans(v, sigma))
+        if gauss == "Gas":
+            integrand = np.imag(population(delta_p-kp*v, delta_c+kc*v, omega_p, 
+            omega_c, spontaneous_32, spontaneous_21, lw_probe, lw_coupling, 
+            temperature, probe_diameter, coupling_diameter, tt)[state_index]*maxwell_gas(v, sigma))
     else:
+        if gauss == "Beam":
+            integrand = np.real(population(delta_p-kp*v, delta_c+kc*v, omega_p, 
+            omega_c, spontaneous_32, spontaneous_21, lw_probe, lw_coupling, 
+            temperature, probe_diameter, coupling_diameter, tt)[state_index]*maxwell_trans(v, sigma))
+        if gauss == "Gas":
+            integrand = np.real(population(delta_p-kp*v, delta_c+kc*v, omega_p, 
+            omega_c, spontaneous_32, spontaneous_21, lw_probe, lw_coupling, 
+            temperature, probe_diameter, coupling_diameter, tt)[state_index]*maxwell_gas(v, sigma))
+    return integrand
+
+def doppler_n(v, delta_p, delta_c, omega_p, omega_c, spontaneous_32,
+            spontaneous_21, lw_probe, lw_coupling, sigma, kp, kc, state_index, 
+            temperature, probe_diameter, coupling_diameter, tt, gauss):
+    if gauss == "Gas":
+        integrand = np.real(population(delta_p-kp*v, delta_c+kc*v, omega_p, 
+        omega_c, spontaneous_32, spontaneous_21, lw_probe, lw_coupling, 
+        temperature, probe_diameter, coupling_diameter, tt)[state_index]*maxwell_gas(v, sigma))
+    if gauss == "Beam":
         integrand = np.real(population(delta_p-kp*v, delta_c+kc*v, omega_p, 
         omega_c, spontaneous_32, spontaneous_21, lw_probe, lw_coupling, 
         temperature, probe_diameter, coupling_diameter, tt)[state_index]*maxwell_trans(v, sigma))
     return integrand
 
+
+
 def doppler_int(delta_p, delta_c, omega_p, omega_c, spontaneous_32, 
                spontaneous_21, lw_probe, lw_coupling, sigma, kp, kc, state_index, beamdiv, 
-               temperature, probe_diameter, coupling_diameter, tt):
+               temperature, probe_diameter, coupling_diameter, tt, gauss):
     """
     This function generates the integrand to solve when including Doppler broadening
     Parameters
@@ -326,9 +351,15 @@ def doppler_int(delta_p, delta_c, omega_p, omega_c, spontaneous_32,
         Doppler averaged density matrix element
 
     """
-    p_avg = quad(doppler, -3*sigma, 3*sigma, args=(delta_p, delta_c, omega_p, omega_c, spontaneous_32,
-            spontaneous_21, lw_probe, lw_coupling, sigma, kp, kc, state_index, 
-            temperature, probe_diameter, coupling_diameter, tt))[0]
+    
+    if tt == "NA":
+        p_avg = quad(doppler_n, -3*sigma, 3*sigma, args=(delta_p, delta_c, omega_p, omega_c, spontaneous_32,
+                spontaneous_21, lw_probe, lw_coupling, sigma, kp, kc, state_index, 
+                temperature, probe_diameter, coupling_diameter, "N", gauss))[0]
+    else:
+        p_avg = quad(doppler, -3*sigma, 3*sigma, args=(delta_p, delta_c, omega_p, omega_c, spontaneous_32,
+                spontaneous_21, lw_probe, lw_coupling, sigma, kp, kc, state_index, 
+                temperature, probe_diameter, coupling_diameter, "N", gauss))[0]
     return p_avg
     
 def pop_calc(delta_c, omega_p, omega_c, spontaneous_32, 
@@ -384,22 +415,32 @@ def pop_calc(delta_c, omega_p, omega_c, spontaneous_32,
     dlist : numpy.ndarray, dtype = float64
         Array of Probe detunings
     plist : numpy.ndarray, dtype = float64
-        Array of population probabilities corresponding to the detunings
+        Array of population probabilities corresponding to the detunings 
 
     """
     iters = np.empty(steps+1, dtype=tuple)
     dlist = np.linspace(dmin, dmax, steps+1)
-    if gauss == "Y":
-        sigma = beamdiv*np.sqrt(3/2)*u(temperature)
+    if gauss == "Beam":
+        sigma = beamdiv*np.sqrt(3/2)*u(temperature) 
         for i in range(0, steps+1):
             iters[i] = (dlist[i], delta_c, omega_p, omega_c, 
                         spontaneous_32, spontaneous_21, 
                         lw_probe, lw_coupling, sigma, 
                         kp, kc, state_index, beamdiv, 
                         temperature, probe_diameter, 
-                        coupling_diameter, tt)
+                        coupling_diameter, tt, gauss)
         plist = np.abs(np.array(parallel_progbar(doppler_int, iters, starmap=True)))
-    else:
+    if gauss == "Gas":
+        sigma = u(temperature) 
+        for i in range(0, steps+1):
+            iters[i] = (dlist[i], delta_c, omega_p, omega_c, 
+                        spontaneous_32, spontaneous_21, 
+                        lw_probe, lw_coupling, sigma, 
+                        kp, kc, state_index, beamdiv, 
+                        temperature, probe_diameter, 
+                        coupling_diameter, tt, gauss)
+        plist = np.abs(np.array(parallel_progbar(doppler_int, iters, starmap=True)))
+    if gauss == "None":
         for i in range(0, steps+1):
             iters[i] = (dlist[i], delta_c, omega_p, omega_c, 
                         spontaneous_32, spontaneous_21, lw_probe, 
@@ -468,7 +509,7 @@ def refractiveindex(delta_p, delta_c, omega_p, omega_c, spontaneous_32,
 
 def ncalc(delta_c, omega_p, omega_c, spontaneous_32, 
              spontaneous_21, lw_probe, lw_coupling, dmin, dmax, steps, 
-             gauss, kp, kc, density, dig, sl, temperature, beamdiv, probe_diameter, coupling_diameter, tt):
+             gauss, kp, kc, density, dig, sl, temperature, beamdiv, probe_diameter, coupling_diameter, tt, ind_type):
     """
     This function generates an array of group refractive indicies for a generated list of probe detunings
     Parameters
@@ -512,7 +553,9 @@ def ncalc(delta_c, omega_p, omega_c, spontaneous_32,
     coupling_diameter: float
         Circular coupling laser diameter in metres
     tt : string
-        Enter argument "Y" for transit time to be included   
+        Enter argument "Y" for transit time to be included  
+    ind_type : string
+        Choice of phase or group refractive index  
 
     Returns
     -------
@@ -525,33 +568,44 @@ def ncalc(delta_c, omega_p, omega_c, spontaneous_32,
 
     iters = np.empty(steps+1, dtype=tuple)
     dlist = np.linspace(dmin, dmax, steps+1)
-    
-# =============================================================================
-#     if gauss == "Y":
-#         sigma = beamdiv*np.sqrt(3/2)*u(temperature)
-#         elem = 1,0
-#         for i in range(0, steps+1):
-#             iters[i] = (dlist[i], delta_c, omega_p, omega_c, 
-#                         spontaneous_32, spontaneous_21, lw_probe, 
-#                         lw_coupling, sigma, kp, kc, elem, beamdiv, 
-#                         temperature, probe_diameter, coupling_diameter, tt)
-#         rhos = np.array(parallel_progbar(doppler_int, iters, starmap=True))
-#         chi_imag = (-2*density*dig**2*rhos)/(hbar*epsilon_0*omega_p)
-#         a = kp*np.abs(chi_imag)
-#         tlist = np.exp(-a*sl)
-#     else:
-# =============================================================================
-    for i in range(0, steps+1):
-        iters[i] = (dlist[i], delta_c, omega_p, omega_c, 
-                    spontaneous_32, spontaneous_21, lw_probe, 
-                    lw_coupling, density, dig, kp, sl, temperature, 
-                    probe_diameter, coupling_diameter, tt)
-    n_real = np.array(parallel_progbar(refractiveindex, iters, starmap=True))
-    
     w_21 = c * 2*np.pi/(461e-9) # probe transition frequency
-    
-    n_g = n_real[:-1] + (dlist[:-1] + w_21) * np.diff(n_real)/np.diff(dlist)
-    return dlist[:-1], n_g
+    tt = "NA"
+    if gauss == "Beam":
+        sigma = beamdiv*np.sqrt(3/2)*u(temperature) 
+        elem = 1,0
+        for i in range(0, steps+1):
+            iters[i] = (dlist[i], delta_c, omega_p, omega_c, 
+                        spontaneous_32, spontaneous_21, lw_probe, 
+                        lw_coupling, sigma, kp, kc, elem, beamdiv, 
+                        temperature, probe_diameter, coupling_diameter, tt, gauss)
+        rhos = np.array(parallel_progbar(doppler_int, iters, starmap=True))
+        chi = (-2*density*dig**2*rhos)/(hbar*epsilon_0*omega_p)
+        n_real = np.sqrt(1+np.real(chi))
+        n_g = n_real[:-1] + (dlist[:-1] + w_21) * np.diff(n_real)/np.diff(dlist)
+    if gauss == "Gas":
+        sigma = u(temperature) 
+        elem = 1,0
+        for i in range(0, steps+1):
+            iters[i] = (dlist[i], delta_c, omega_p, omega_c, 
+                        spontaneous_32, spontaneous_21, lw_probe, 
+                        lw_coupling, sigma, kp, kc, elem, beamdiv, 
+                        temperature, probe_diameter, coupling_diameter, tt, gauss)
+        rhos = np.array(parallel_progbar(doppler_int, iters, starmap=True))
+        chi = (-2*density*dig**2*rhos)/(hbar*epsilon_0*omega_p)
+        n_real = np.sqrt(1+np.real(chi))
+        n_g = n_real[:-1] + (dlist[:-1] + w_21) * np.diff(n_real)/np.diff(dlist)
+    if gauss == "None":
+        for i in range(0, steps+1):
+            iters[i] = (dlist[i], delta_c, omega_p, omega_c, 
+                        spontaneous_32, spontaneous_21, lw_probe, 
+                        lw_coupling, density, dig, kp, sl, temperature, 
+                        probe_diameter, coupling_diameter, tt)
+        n_real = np.array(parallel_progbar(refractiveindex, iters, starmap=True))
+    if ind_type == "Phase":
+        return dlist, n_real
+    if ind_type == "Group":
+        n_g = n_real[:-1] + (dlist[:-1] + w_21) * np.diff(n_real)/np.diff(dlist)
+        return dlist[:-1], n_g
 
 def transmission(delta_p, delta_c, omega_p, omega_c, spontaneous_32, 
                  spontaneous_21, lw_probe, lw_coupling, density, dig, kp, sl, 
@@ -665,25 +719,41 @@ def tcalc(delta_c, omega_p, omega_c, spontaneous_32,
     """
     iters = np.empty(steps+1, dtype=tuple)
     dlist = np.linspace(dmin, dmax, steps+1)
-    if gauss == "Y":
+    if gauss == "Beam":
         sigma = beamdiv*np.sqrt(3/2)*u(temperature)
         elem = 1,0
         for i in range(0, steps+1):
             iters[i] = (dlist[i], delta_c, omega_p, omega_c, 
                         spontaneous_32, spontaneous_21, lw_probe, 
                         lw_coupling, sigma, kp, kc, elem, beamdiv, 
-                        temperature, probe_diameter, coupling_diameter, tt)
+                        temperature, probe_diameter, coupling_diameter, tt, gauss)
         rhos = np.array(parallel_progbar(doppler_int, iters, starmap=True))
         chi_imag = (-2*density*dig**2*rhos)/(hbar*epsilon_0*omega_p)
         a = kp*np.abs(chi_imag)
         tlist = np.exp(-a*sl)
-    else:
+    if gauss == "Gas":
+        sigma = u(temperature)
+        elem = 1,0
+        for i in range(0, steps+1):
+            iters[i] = (dlist[i], delta_c, omega_p, omega_c, 
+                        spontaneous_32, spontaneous_21, lw_probe, 
+                        lw_coupling, sigma, kp, kc, elem, beamdiv, 
+                        temperature, probe_diameter, coupling_diameter, tt, gauss)
+        rhos = np.array(parallel_progbar(doppler_int, iters, starmap=True))
+        chi_imag = (-2*density*dig**2*rhos)/(hbar*epsilon_0*omega_p)
+        a = kp*np.abs(chi_imag)
+        tlist = np.exp(-a*sl)
+    if gauss == "None":
         for i in range(0, steps+1):
             iters[i] = (dlist[i], delta_c, omega_p, omega_c, 
                         spontaneous_32, spontaneous_21, lw_probe, 
                         lw_coupling, density, dig, kp, sl, temperature, 
                         probe_diameter, coupling_diameter, tt)
         tlist = np.array(parallel_progbar(transmission, iters, starmap=True))
+    try:
+        print(sigma)
+    except:
+        pass
     return dlist, tlist
     
 def FWHM(dlist, tlist):
@@ -785,3 +855,20 @@ def maxwell_trans(v, sigma):
     """
     return 1/(np.sqrt(2*np.pi)*sigma)*np.exp(-(v**2/(2*sigma**2)))
 
+def maxwell_gas(v, u):
+    """
+    This function calculates the velocity 
+    distribution of strontium atoms in a gas moving in one dimension
+    ----------
+    v : float
+        Velocity of strontium atom in m/s
+    u: float
+        Most probable speed of a strontium atom moving in a gas in m/s
+
+    Returns
+    -------
+    f(vl) : float
+        Probability density of finding an atom with a given longitudinal velocity
+
+    """
+    return 1/(u*np.sqrt(np.pi)) * np.exp(-(v**2/(u**2)))

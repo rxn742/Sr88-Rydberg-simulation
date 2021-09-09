@@ -76,8 +76,8 @@ class UI(QMainWindow):
         self.pop_button.setStatusTip("Plot Population")
         self.toolbar.addAction(self.pop_button)
         self.pop_button.triggered.connect(self.population)
-        self.sl_button = QAction("Plot Group Index", self)
-        self.sl_button.setStatusTip("Plot Group Index")
+        self.sl_button = QAction("Plot Refractive Index", self)
+        self.sl_button.setStatusTip("Plot Refractive Index")
         self.toolbar.addAction(self.sl_button)
         self.sl_button.triggered.connect(self.slowlight)
         self.exit_button = QAction("Exit", self)
@@ -122,7 +122,9 @@ class UI(QMainWindow):
         """
         Adds the checkboxes for Doppler and Transit-time broadening
         """
-        self.doppler = QCheckBox("Include Doppler Broadening?")
+        self.doppler = QComboBox()
+        self.doppler.addItems(["No velocity distribution", "Maxwell-Boltzmann Gas", "Atomic Beam"])
+        self.doppler.setCurrentIndex(0)
         self.transit = QCheckBox ("Include Transit Time Broadening?")
         self.leftLayout.addWidget(self.doppler)
         self.leftLayout.addWidget(self.transit)
@@ -148,7 +150,7 @@ class UI(QMainWindow):
                   "Coupling Laser Linewidth (Hz)" : (10, 0),
                   "Atomic Density (m^-3)" : (11, 0),
                   "Atomic Beam Width (m)" : (12, 0), 
-                  "Oven Temperature (K)" : (13, 0), 
+                  "Temperature (K)" : (13, 0), 
                   "Atomic Beam Divergence Angle (Rad)" : (14, 0),
                   "Minimum Detuning (Hz)" : (15, 0),
                   "Maximum Detunung (Hz)" : (16, 0),
@@ -293,10 +295,12 @@ class UI(QMainWindow):
                 if vals["omega_p"] == 0 or vals["omega_c"] == 0:
                     self.rabi_warn()
                     return        
-        if self.doppler.isChecked():
-            gauss = "Y"
-        else:
-            gauss = "N"
+        if self.doppler.currentIndex() == 0:
+            gauss = "None"
+        if self.doppler.currentIndex() == 1:
+            gauss = "Gas"
+        if self.doppler.currentIndex() == 2:
+            gauss = "Beam"
 
         if self.transit.isChecked():
             if vals["pd"] == 0:
@@ -395,10 +399,12 @@ class UI(QMainWindow):
                 if vals["omega_p"] == 0 or vals["omega_c"] == 0:
                     self.rabi_warn()
                     return
-        if self.doppler.isChecked():
-            gauss = "Y"
-        else:
-            gauss = "N"
+        if self.doppler.currentIndex() == 0:
+            gauss = "None"
+        if self.doppler.currentIndex() == 1:
+            gauss = "Gas"
+        if self.doppler.currentIndex() == 2:
+            gauss = "Beam"
 
         if self.transit.isChecked():
             if vals["pd"] == 0:
@@ -505,10 +511,12 @@ class UI(QMainWindow):
                 if vals["omega_p"] == 0 or vals["omega_c"] == 0:
                     self.rabi_warn()
                     return        
-        if self.doppler.isChecked():
-            gauss = "Y"
-        else:
-            gauss = "N"
+        if self.doppler.currentIndex() == 0:
+            gauss = "None"
+        if self.doppler.currentIndex() == 1:
+            gauss = "Gas"
+        if self.doppler.currentIndex() == 2:
+            gauss = "Beam"
 
         if self.transit.isChecked():
             if vals["pd"] == 0:
@@ -520,20 +528,23 @@ class UI(QMainWindow):
             tt = "Y"
         else:
             tt = "N"
-        
-        if self.system_choice.currentIndex() == 0:
-            self.spontaneous_32_413 = func_spon_413(vals["n"], "1D2")
-            dlist, nlist = ncalc(vals["delta_c"], vals["omega_p"], vals["omega_c"], self.spontaneous_32_413, self.spontaneous_21_413, 
-                       vals["lwp"], vals["lwc"], vals["dmin"], vals["dmax"], vals["steps"], gauss, kp_413, kc_413, 
-                       vals["density"], d12_413, vals["sl"], vals["T"], vals["alpha"], vals["pd"], vals["cd"], tt)
-            self.n_plotter(dlist, nlist)
-            
-        if self.system_choice.currentIndex() == 1:
-            self.spontaneous_32_318 = func_spon_318(vals["n"], "3D3")
-            dlist, nlist = ncalc(vals["delta_c"], vals["omega_p"], vals["omega_c"], self.spontaneous_32_318, self.spontaneous_21_318, 
-                       vals["lwp"], vals["lwc"], vals["dmin"], vals["dmax"], vals["steps"], gauss, kp_318, kc_318, 
-                       vals["density"], d12_318, vals["sl"], vals["T"], vals["alpha"], vals["pd"], vals["cd"], tt)
-            self.n_plotter(dlist, nlist)
+        self.showdialog2()
+        try:
+            if self.system_choice.currentIndex() == 0:
+                self.spontaneous_32_413 = func_spon_413(vals["n"], "1D2")
+                dlist, nlist = ncalc(vals["delta_c"], vals["omega_p"], vals["omega_c"], self.spontaneous_32_413, self.spontaneous_21_413, 
+                           vals["lwp"], vals["lwc"], vals["dmin"], vals["dmax"], vals["steps"], gauss, kp_413, kc_413, 
+                           vals["density"], d12_413, vals["sl"], vals["T"], vals["alpha"], vals["pd"], vals["cd"], tt, self.ind_type)
+                self.n_plotter(dlist, nlist)
+                
+            if self.system_choice.currentIndex() == 1:
+                self.spontaneous_32_318 = func_spon_318(vals["n"], "3D3")
+                dlist, nlist = ncalc(vals["delta_c"], vals["omega_p"], vals["omega_c"], self.spontaneous_32_318, self.spontaneous_21_318, 
+                           vals["lwp"], vals["lwc"], vals["dmin"], vals["dmax"], vals["steps"], gauss, kp_318, kc_318, 
+                           vals["density"], d12_318, vals["sl"], vals["T"], vals["alpha"], vals["pd"], vals["cd"], tt, self.ind_type)
+                self.n_plotter(dlist, nlist)
+        except:
+            return
             
     def load_csv(self):
         """
@@ -633,6 +644,36 @@ class UI(QMainWindow):
         self.d.setWindowModality(Qt.ApplicationModal)
         self.d.exec_()
         
+    def showdialog2(self):
+        """
+        Brings up a dialog box which allows selection of which
+        refractive index to plot
+        """
+        self.ind = QDialog()
+        self.ind.setFixedSize(370, 90)
+        self.indd = QComboBox(self.ind)
+        self.indd.move(150, 0)
+        self.indd.addItems(["Phase", "Group"])
+        self.indd.setCurrentIndex(0)
+        self.b2 = QPushButton("ok",self.ind)
+        self.b2.move(145, 50)
+        self.b2.clicked.connect(self.choose_index)
+        
+        self.ind.setWindowTitle("Choose index")
+        self.ind.setWindowModality(Qt.ApplicationModal)
+        self.ind.exec_()
+
+    def choose_index(self):
+        """
+        Converts dialog box value back into choice of state
+        that the model accepts
+        """
+        if self.indd.currentIndex() == 0:
+            self.ind_type = "Phase"
+        if self.indd.currentIndex() == 1:
+            self.ind_type = "Group"
+        self.ind.close()
+
     def state(self):
         """
         Converts dialog box value back into choice of state
@@ -783,17 +824,22 @@ class UI(QMainWindow):
             self.spontaneous_32 = self.spontaneous_32_318
         self.dlist = dlist
         self.flist = nlist
-        print(FWHM(dlist, nlist))
+        #print(FWHM(dlist, nlist))
         self.typ = "n"
         fig = plt.figure(figsize=(8, 6))
         ax = fig.add_subplot(111)
         """ Geometric library to calculate linewidth of EIT peak (FWHM) """
         max_gi = np.max(nlist)
-        group_vel = c/max_gi
-        if max_gi != 0:
-            ax.text(0.8, 0.07, f"Max $n_g$ = {max_gi:.0f}", transform=ax.transAxes, fontsize=10, va='center', ha='center')
-            ax.text(0.8, 0.13, f"Min $v_g$ = {group_vel:.0f} $m/s$", transform=ax.transAxes, fontsize=10, va='center', ha='center')                     
-        plt.title(r"Group refractive index against probe beam detuning")
+        group_vel = c/max_gi                     
+        if self.ind_type == "Group":
+            plt.title(r"Group refractive index against probe beam detuning")
+            ax.set_ylabel(r"Group Index")
+            if max_gi != 0:
+                ax.text(0.8, 0.07, f"Max $n_g$ = {max_gi:.0f}", transform=ax.transAxes, fontsize=10, va='center', ha='center')
+                ax.text(0.8, 0.13, f"Min $v_g$ = {group_vel:.0f} $m/s$", transform=ax.transAxes, fontsize=10, va='center', ha='center')
+        if self.ind_type == "Phase":
+            plt.title(r"Phase refractive index against probe beam detuning")
+            ax.set_ylabel(r"Phase Index")
         if dlist[-1]-dlist[0] >= 1e6:
             ax.plot(dlist/(1e6), nlist, color="orange", label="$\Omega_c=$" f"{self.vals['omega_c']:.2e} $Hz$"\
                 "\n" "$\Omega_p=$" f"{self.vals['omega_p']:.2e} $Hz$" "\n" \
@@ -812,7 +858,7 @@ class UI(QMainWindow):
                 f"$\gamma_p$ = {self.vals['lwp']:.2e} $Hz$" "\n" 
                 f"$\gamma_c$ = {self.vals['lwc']:.2e} $Hz$")
             ax.set_xlabel(r"$\Delta_p$ / kHz")
-        ax.set_ylabel(r"Group Index")
+
         ax.legend()
         plt.show()
         fig.canvas.mpl_connect('close_event', self.save_dialog)
